@@ -3,7 +3,7 @@ A few scripts in one place
 
 i was tired of finding the files and stuff so i combined them to one file that opens them for me.
 
-usage: `git clone bash Bomb`
+usage: ``git clone https://github.com/BrotherBoard/BombScripts && cd BombScripts && bash Bomb``
 
 
 **included scripts:**
