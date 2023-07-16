@@ -1,0 +1,27 @@
+!/bin/bash
+
+while true
+do
+clear
+echo "BombScripts v1"
+echo "==============="
+echo "Select a script"
+echo
+echo "1-> Decimal Battery"
+echo "2-> Battery Level Changer"
+echo "3-> IP Address Adder"
+echo "X-> Exit'
+echo
+read -e -p ">>>" ban
+if [[ $ban == "1" ]]
+then
+file="DecimalBattery"
+elif [[ $ban == "2" ]]
+then
+file="BatteryLevelChanger"
+elif [[ $ban == "3" ]]
+then
+file="IPAdd"
+fi
+chmod +x ${file} && chmod 777 ${file} && ./${file}
+done
