@@ -1,11 +1,10 @@
 #!/bin/bash
 
 function blud () {
-if [[ $1 == $2 ]]
+if [[ $ban == $1 ]]
 then
-eval "$3"
-fi
-}
+eval "$2"
+fi }
 while true
 do
 clear
@@ -19,22 +18,10 @@ echo "3-> IP Address Adder"
 echo "X-> Exit"
 echo
 read -e -p ">>>" ban
-blud $ban 1 "file='DecimalBattery'"
-#if [[ $ban == "1" ]]
-#then
-#file="DecimalBattery"
-#elif [[ $ban == "2" ]]
-#then
-#file="BatteryLevelChanger"
-#elif [[ $ban == "3" ]]
-#then
-#file="IPAdd"
-#elif [[ $ban == "x" ]]
-#then
-#exit
-#elif [[ $ban == "X" ]]
-#then
-#clear && exit
-#fi
+blud 1 "file=DecimalBattery"
+blud 2 "file=BatteryLevelChanger"
+blud 3 "file=IPAdd"
+blud x "exit"
+blud X "exit"
 chmod +x ${file} && chmod 777 ${file} && ./${file}
 done
