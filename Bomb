@@ -22,6 +22,12 @@ file="BatteryLevelChanger"
 elif [[ $ban == "3" ]]
 then
 file="IPAdd"
+elif [[ $ban == "x" ]]
+then
+exit
+elif [[ $ban == "X" ]]
+then
+exit
 fi
 chmod +x ${file} && chmod 777 ${file} && ./${file}
 done
