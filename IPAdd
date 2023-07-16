@@ -1,0 +1,547 @@
+#!/bin/bash
+
+#when added an ip with BRC command, first IP takes 0
+#variables
+
+#uncomment to reset bash.rc changes manually
+#sed -i '/#<IPAddressAdder_IExist>/d' $brc
+
+brc="/data/data/com.termux/files/usr/etc/bash.bashrc"
+
+function QuickLoad_Refresh () {
+QuickLoad_IP=`cat $brc | grep -o -P '(?<=#<IPAddressAdder_QuickLoad_IP>).*(?=</IPAddressAdder_QuickLoad_IP>)'`
+QuickLoad_LAN=`cat $brc | grep -o -P '(?<=#<IPAddressAdder_QuickLoad_LAN>).*(?=</IPAddressAdder_QuickLoad_LAN>)'`
+}
+#Refresh QuickLoad Values
+QuickLoad_Refresh
+
+#end of variables
+
+function testmode () {
+$1
+read -e -p "Command Finished!" yeaaa
+exit
+}
+
+#functions
+
+#function BRC
+#add text to bashrc file, every line is marked
+#usage: BRC "text goes here"
+#BRC pov (new line): #LOG text goes here
+#1 will increase next line and so on
+#it feels cool to write functions lmao
+#enter "IP" as $1 to save an ip, and LAN to save a lan
+
+function ShowIP () {
+IP_LIST=`cat $brc | grep -o -P '(?<=#<IPAddressAdder_SavedIP>).*(?=</IPAddressAdder_SavedIP>)'`
+echo $IP_LIST #for function output
+}
+function ShowLAN () {
+LAN_LIST=`cat $brc | grep -o -P '(?<=#<IPAddressAdder_SavedLAN>).*(?=</IPAddressAdder_SavedLAN>)'`
+echo $LAN_LIST #for function output
+}
+
+function ListSaved () {
+if [[ -z $1 ]]
+then
+clear
+echo "IP Adding Tool v1"
+echo "================="
+echo "Note: starts from zero"
+echo "Enter number to load (in case you restarted)"
+echo "List of saved IPs with their LANs:"
+echo
+elif [[ $1 == "del" ]]
+then
+clear
+echo "IP Adding Tool v1"
+echo "================="
+echo "Here are your saved IPs"
+echo "Enter number to delete from below"
+echo "Enter 'A' to delete all"
+echo
+fi
+#get the array of IPs
+IP_ARR=`ShowIP`
+IP_ARR2=($IP_ARR)
+#get the array if LANs
+LAN_ARR=`ShowLAN`
+LAN_ARR2=($LAN_ARR)
+IP_LAN_ARR=`echo -e "$IP_ARR $LAN_ARR"`
+IP_LAN_ARR2=($IP_LAN_ARR)
+i=0
+for count in ${IP_ARR2[@]} #bbbbbbbbbbb
+do
+ GetByNUM $i brag brag2 brag3
+ echo -e "${brag3}:"
+ echo $brag
+ echo $brag2
+ echo
+ let "i=i+1"
+done
+echo "X-> cancel"
+read -e -p ">>>" choice
+if [[ -z $choice ]]
+then
+echo "no input, canceled."
+sleep 1
+elif [[ $choice == "x" ]]
+then
+:
+elif [[ $choice == "X" ]]
+then
+:
+break
+elif [[ $choice == "A" ]]
+then
+ResetAll
+echo "deleted all saved IPs"
+sleep 1
+elif [[ $choice == "a" ]]
+then
+ResetAll
+echo "deleted all saved IPs"
+sleep 1
+else
+ if [[ -z $1 ]]
+ then
+ rez2=`cat $brc | grep "deleted_IP_$choice"`
+ if [[ -z $rez2 ]]
+ then
+ su -c ip address add ${IP_ARR2[$choice]} dev ${LAN_ARR2[$choice]}
+ echo -e "loaded IP number ${choice} with the following:"
+ echo -e "${IP_ARR2[$choice]}"
+ echo -e "${LAN_ARR2[$choice]}"
+ sleep 2
+ else
+ echo "you can't load a deleted IP"
+ sleep 1.5
+ fi
+ elif [[ $1 == "del" ]]
+ then
+ #bashrc comes first
+ rez=`cat $brc | grep "deleted_IP_$choice"`
+ if [[ -z $rez ]]
+ then
+ rezult="no" #no, please delete coz not deleted
+ else
+ rezult="yes" #yes, it is deleted already
+ fi
+if [[ $rezult == "yes" ]]
+ then
+ echo "IP is already deleted"
+ sleep 1
+ else
+ sed -i "/<\/IPAddressAdder_SavedIP><NUM>$choice<\/NUM>/d" $brc
+ echo -e "#<IPAddressAdder_SavedIP>deleted_IP_${choice}</IPAddressAdder_SavedIP><NUM>$choice</NUM>" >> $brc
+ sed -i "/<\/IPAddressAdder_SavedLAN><NUM>$choice<\/NUM>/d" $brc
+ echo -e "#<IPAddressAdder_SavedLAN>deleted_LAN</IPAddressAdder_SavedLAN><NUM>$choice</NUM>" >> $brc
+ #remove IP by unsetting array (works)
+ unset IP_ARR2[$choice]
+ #clean the gap
+ royna_IP=$(echo -e "${IP_ARR2[@]}" | tr -d '\n')
+ #update array with the cleaned version
+ IP_ARR2=($royna_IP)
+ fi
+ #same applies to lan
+
+ #remove LAN by unsetting array aaaaaaaaaaa
+ if [[ $rezult == "yes" ]]
+ then
+ :
+ else
+ unset LAN_ARR2[$choice]
+ #clean the gap
+ royna_LAN=$(echo -e "${LAN_ARR2[@]}" | tr -d '\n')
+ #update array with the cleaned version
+ LAN_ARR2=($royna_LAN)
+
+ echo -e "done!"
+ sleep 1
+ fi
+ fi
+fi
+}
+#testmode "ListSaved del"
+
+function BRC () {
+if [[ $1 == "IP" ]]
+then
+check_ip=`grep -o "<IPAddressAdder_IExist_IP>" $brc`
+elif [[ $1 == "LAN" ]]
+then
+check_lan=`grep -o "#<IPAddressAdder_IExist_LAN>" $brc`
+fi
+
+if [[ $1 == "IP" ]]
+then
+if [[ -z $check_ip ]]
+then
+IP_NUM=0
+echo -e "#<IPAddressAdder_IExist_IP>$IP_NUM</IPAddressAdder_IExist_IP>" >> $brc
+fi
+fi
+
+if [[ $1 == "LAN" ]]
+then
+if [[ -z $check_lan ]]
+then
+LAN_NUM=0
+echo -e "#<IPAddressAdder_IExist_LAN>$LAN_NUM</IPAddressAdder_IExist_LAN>" >> $brc
+fi
+fi
+
+if [[ -z $check_ip ]]
+then
+:
+else
+if [[ $1 == "IP" ]]
+then
+IP_NUM=`cat $brc |grep -o -P '(?<=#<IPAddressAdder_IExist_IP>).*(?=</IPAddressAdder_IExist_IP>)'`
+sed -i '/#<IPAddressAdder_IExist_IP>/d' $brc
+IP_NUM=`echo -e "$IP_NUM + 1" |bc`
+echo -e "#<IPAddressAdder_IExist_IP>$IP_NUM</IPAddressAdder_IExist_IP>" >> $brc
+fi
+fi
+
+if [[ -z $check_lan ]]
+then
+:
+else
+if [[ $1 == "LAN" ]]
+then
+LAN_NUM=`cat $brc |grep -o -P '(?<=#<IPAddressAdder_IExist_LAN>).*(?=</IPAddressAdder_IExist_LAN>)'`
+sed -i '/#<IPAddressAdder_IExist_LAN>/d' $brc
+LAN_NUM=`echo -e "$LAN_NUM + 1" |bc`
+echo -e "#<IPAddressAdder_IExist_LAN>$LAN_NUM</IPAddressAdder_IExist_LAN>" >> $brc
+fi
+fi
+
+if [[ $1 == "IP" ]]
+then
+echo -e "#<IPAddressAdder_SavedIP>$2</IPAddressAdder_SavedIP><NUM>$IP_NUM</NUM>" >> $brc
+
+elif [[ $1 == "LAN" ]]
+then
+echo -e "#<IPAddressAdder_SavedLAN>$2</IPAddressAdder_SavedLAN><NUM>$LAN_NUM</NUM>" >> $brc
+fi
+} #htzmak
+#end of function BRC #AAAAAAAAA
+
+#function ResetAll
+#usage: ResetAll
+#resets everything the script does to bash.rc
+function ResetAll () {
+QuickLoad_Backup_IP=`cat $brc | grep "QuickLoad_IP"`
+QuickLoad_Backup_LAN=`cat $brc | grep "QuickLoad_LAN"`
+sed -i '/#<IPAddressAdder/d' $brc
+echo $QuickLoad_Backup_IP >> $brc
+echo $QuickLoad_Backup_LAN >> $brc
+} #marked
+
+#end of function ResetAll
+
+#function blud
+#usage: blud var value true false_optional
+#checks if var is equal to value, set $3 to ":" to pass
+function blud () {
+if [[ -z $4 ]]
+then
+board=":"
+else
+board=`echo -e $4`
+fi
+if [[ $1 == $2 ]]
+then
+$3
+else
+$board
+fi
+}
+#end of function blud, tested and its working
+
+#function AddIP
+#usage: AddIP
+function AddIP () {
+
+while true #dun
+do
+clear
+echo "IP Adding Tool v1"
+echo "================="
+echo "Enter an ip to add"
+echo
+echo "X-> Go back"
+read -e -p ">>>" IPAdd
+if [[ -z $IPAdd ]] #done 5
+then
+ echo "Enter some numbers"
+ sleep 2
+elif [[ $IPAdd == x ]]
+then
+ break
+elif [[ $IPAdd == X ]]
+then
+ break
+else
+ clear
+ while true #dun 2
+ do
+  clear
+  echo "IP Adding Tool v1"
+  echo "================="
+  echo "Enter a lan to add ip"
+  echo -e "Your IP ($IPAdd) will be added to that lan"
+  echo "lan examples: wlan0, wlan1, wlan2 etc..."
+  echo
+  echo "X-> Go Back"
+  read -e -p ">>>" wlan
+  if [[ $wlan == x ]] #done 6
+  then
+   break
+  elif [[ $wlan == X ]]
+   then
+   break
+  fi #yep 6
+  
+  if [[ -z $wlan ]] #done 7
+  then
+   echo "enter something"
+   sleep 2
+  else
+   su -c ip address add $IPAdd dev $wlan
+   echo -e "attempted to add IP $IPAdd to $wlan"
+   BRC IP $IPAdd
+   BRC LAN $wlan
+   sleep 1
+   break
+  fi #yep 7
+  done
+fi #yep 5
+done #yup 2
+}
+#end of function AddIP
+
+#start of function GetByNUM
+#usage: GetByNUM CURRENT_NUM VAR_FOR_IP VAR_FOR_LAN VAR_FOR_NUM
+#get the saved IP from bashrc by its NUM
+#enter NUM as $1, var to save IP $2, var to save num to uis $3, save NUM to $3 (optional)
+function GetByNUM () {
+line=`grep "<NUM>$1</NUM>" $brc`
+line2=`echo -e "$line" | grep -o -P '(?<=<IPAddressAdder_SavedIP>).*(?=</IPAddressAdder_SavedIP>)'`
+line3=`echo -e "$line" | grep -o -P '(?<=<IPAddressAdder_SavedLAN>).*(?=</IPAddressAdder_SavedLAN>)'`
+eval "$2='$line2'"
+eval "$3='$line3'"
+if [[ -z $4 ]]
+then
+:
+else
+eval "$4='$1'"
+fi
+}
+
+#end of function GetByNUM
+#start of functuon ViewIP
+
+#function ViewIP
+#usage: ViewIP
+function ViewIP () {
+echo -e "hello is $hello"
+}
+#end of function ViewIP
+
+#function RemIP
+#usage: RemIP
+function RemIP () {
+while true
+do
+clear
+echo "IP Adding Tool v1"
+echo "================="
+echo "Enter IP address to remove"
+echo
+echo "X-> cancel"
+read -e -p ">>>" remove_me_IP
+if [[ -z $remove_me_IP ]]
+then
+echo "enter some ip"
+elif [[ $remove_me_IP == "x" ]]
+then
+break
+elif [[ $remove_me_IP == "X" ]]
+then
+break
+else
+ while true
+ do
+ clear
+ echo "IP Adding Tool v1"
+ echo "================="
+ echo "Remove from which lan?"
+ echo
+ read -e -p ">>>" remove_me_LAN
+ if [[ -z $remove_me_LAN ]]
+ then
+ echo "enter some LAN"
+ else
+ su -c ip address del $remove_me_IP dev $remove_me_LAN
+ echo -e "removed IP $remove_me_IP from LAN $remove_me_LAN"
+ sleep 1
+ break
+ fi
+ done
+fi
+done
+}
+#end of function RemIP
+
+#function ResetSavedIP
+function ResetSavedIP () {
+ListSaved del
+}
+
+function exitn () {
+clear
+exit
+}
+
+function QuickLoad () {
+QuickLoad_IP=`cat $brc | grep -o -P '(?<=<IPAddressAdder_QuickLoad_IP>).*(?=</IPAddressAdder_QuickLoad_IP)'`
+QuickLoad_LAN=`cat $brc | grep -o -P '(?<=<IPAddressAdder_QuickLoad_LAN>).*(?=</IPAddressAdder_QuickLoad_LAN>)'`
+if [[ -z $QuickLoad_IP ]] && [[ -z $QuickLoad_LAN ]]
+then
+echo "You need to Customize QuickLoad first from main menu"
+sleep 2
+else
+su -c ip address add $QuickLoad_IP dev $QuickLoad_LAN
+echo -e "successfully loaded IP $QuickLoad_IP in LAN $QuickLoad_LAN"
+sleep 1.5
+fi
+}
+
+
+function QuickLoadConf () {
+clear
+
+while true #ok
+do
+ clear
+ echo "IP Adding Tool v1"
+ echo "================="
+ echo "QuickLoad Configration"
+ echo
+ echo "1-> Set quick IP"
+ echo "2-> Set quick LAN"
+ echo "3-> Clear quick values"
+ echo "X-> Go back"
+ read -e -p ">>>" QLRead
+ if [[ $QLRead == 1 ]] #2
+ then
+  #Set quick IP
+  while true #3
+  do
+   clear
+   echo "IP Adding Tool v1"
+   echo "================="
+   echo "Set Quick IP"
+   echo
+   echo -e "Current value: ${QuickLoad_IP}"
+   echo "Type some IP below"
+   echo
+   echo "X-> Go back"
+   read -e -p ">>>" QuickLoad_IP_temp
+   if [[ -z $QuickLoad_IP_temp ]] #4
+   then
+    echo "type something"
+   elif [[ $QuickLoad_IP_temp == x ]]
+   then
+    break
+   elif [[ $QuickLoad_IP_temp == X ]]
+   then
+    break
+   else
+    QuickLoad_IP=$QuickLoad_IP_temp
+    sed -i '/#<IPAddressAdder_QuickLoad_IP/d' $brc
+    echo -e "#<IPAddressAdder_QuickLoad_IP>${QuickLoad_IP}</IPAddressAdder_QuickLoad_IP>" >> $brc
+   fi #4
+  done #3
+
+elif [[ $QLRead == 2 ]]
+then
+#Set quick LAN
+while true
+do
+ clear
+ echo "IP Adding Tool v1"
+ echo "================="
+ echo "Set Quick LAN"
+ echo
+ echo -e "Current value: ${QuickLoad_LAN}"
+ echo "Type some LAN below"
+ echo
+ echo "X-> Go back"
+ read -e -p ">>>" QuickLoad_LAN_temp
+ if [[ -z $QuickLoad_LAN_temp ]]
+ then
+  echo "type something"
+ elif [[ $QuickLoad_LAN_temp == x ]]
+ then
+  break
+ elif [[ $QuickLoad_LAN_temp == X ]]
+ then
+  break
+ else
+  QuickLoad_LAN=$QuickLoad_LAN_temp
+  sed -i '/#<IPAddressAdder_QuickLoad_LAN/d' $brc
+  echo -e "#<IPAddressAdder_QuickLoad_LAN>${QuickLoad_LAN}</IPAddressAdder_QuickLoad_LAN>" >> $brc
+ fi
+done
+#end of set quick LAN
+
+elif [[ $QLRead == x ]]
+then
+break
+elif [[ $QLRead == X ]]
+then
+break
+elif [[ $QLRead == 3 ]]
+then
+sed -i '/QuickLoad/d' $brc
+echo "Deleted all QuickLoad values"
+#Refresh QuickLoad Values
+QuickLoad_Refresh
+sleep 1.5
+fi
+done
+}
+while true #dun 3
+do
+clear
+echo "IP Adding Tool v1"
+echo "================="
+echo "Select an option"
+echo
+echo "0-> QuickLoad" #done
+echo "1-> Add an IP address" #done
+echo "2-> Remove an IP address" #done
+echo "3-> Load saved IPs" #done
+echo "4-> Delete a saved IP" #done
+echo "5-> Customize QuickLoad" #done
+echo "X-> Exit" #done
+echo
+read -e -p ">>>" main
+blud $main 0 "QuickLoad" #done
+blud $main X "exitn" #done
+blud $main x "exitn" #done
+blud $main 1 "AddIP" #done
+blud $main 2 "RemIP" #done
+blud $main 3 "ListSaved" #done
+blud $main 4 "ResetSavedIP" #done
+blud $main 5 "QuickLoadConf" #done
+done #yup 3
+
+#end of script, that was indeed fun to write
+#i hope someone finds it useful like i do
+#written by BrotherBoard
+#Telegram: "BrudherBoard.t.me"
