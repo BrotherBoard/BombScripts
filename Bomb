@@ -3,7 +3,7 @@
 function blud () {
 if [[ $1 == $2 ]]
 then
-$3
+eval "$3"
 fi
 }
 while true
