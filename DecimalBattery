@@ -1,0 +1,1273 @@
+#!/bin/bash
+#caught you reading code, dropped some tips for u
+# have fun lmao
+
+#Decimal Battery v6.0
+#By @BrudherBoard on Telegram
+
+#loop whole script
+dead=1
+while [[ $dead == 1 ]] #start of whele dead
+do #do everything
+
+#first clean up
+clear
+
+#check SELinux
+zxc=`su -c getenforce`
+if [[ $zxc == "Enforcing" ]]
+then
+vbn="Should work"
+mkm="Won't work"
+elif [[ $zxc == "Permissive" ]]
+then
+vbn="Will not work"
+mkm="Should Work"
+else
+echo "unable to get SELinux status"
+fi
+
+#check sysdir for settings
+defsysdir=/sdcard
+cd /sdcard
+sysdir=`cat .locator`
+gotwait=`cat $sysdir/DecimalBatteryFiles/gotwait`
+colorful=`cat $sysdir/DecimalBatteryFiles/colorful`
+if [[ -z $colorful ]]
+then
+colorful=False
+fi
+
+#for flashes
+R='\033[0m' #NOCOLOR
+fulss='\033[1;31m' #LIGHTRED
+truu='\033[1;32m' #LIGHTGREEN
+
+#first one-time setup
+first=69
+iamnoob=69
+noob=`cat $sysdir/DecimalBatteryFiles/noob`
+clear
+if [[ $noob == 1 ]]
+then
+:
+else
+echo
+echo -e "Decimal Battery v6.0"
+echo -e "--------------------"
+echo -e "First time setup"
+echo
+echo -e "for script to work, I have to do these commands"
+echo
+echo -e "su -c setenforce 0"
+echo -e "pkg update"
+echo -e "pkg install bc"
+echo -e "pkg install bash"
+echo
+echo -e "first cmd sets permissive mode, which allows"
+echo -e "reading power_supply located in sys/class, but"
+echo -e "may cause safetynet problems, don't worry, it has"
+echo -e "an on/off toggle in settings"
+echo
+echo -e "second cmd updates packages, does not upgrade."
+echo
+echo -e "third cmd installs bc, which is for calculations."
+echo
+echo -e "forth cmd installs bash, just to make sure its latest."
+echo
+echo -e "you can say no, commands do exsist in about for later,"
+echo -e "for this menu to appear again, you need to reset"
+echo -e "script from settings."
+echo
+read -e -p "proceed? (y/n) >>" first
+fi
+
+if [[ $first == y ]]
+then
+read -e -p "would you like to set permissive? (current: $zxc)" shallwe
+echo "permissive will replace enforcing in your SELinux"
+echo "and this is fot permission issues, if you dont"
+echo "know which, then just type n"
+if [[ $shallwe == n ]]
+then
+echo "setting permissive"
+su -c setenforce 0
+sleep 0.5
+echo "permissive set, for enforce... navigate to settings"
+else
+echo "your current SELinux is unchanged: $zxc"
+fi
+pkg update
+echo "pkg update dope"
+sleep 0.5
+pkg install bc
+echo "bc dope"
+sleep 0.5
+pkg install bash
+echo "bash yes"
+sleep 1.1
+clear
+elif [[ $first == n ]]
+then
+echo "srarting script anyway"
+sleep 1.1
+clear
+elif [[ $first == 69 ]]
+then
+:
+else
+echo "enter y or n"
+exit
+fi
+
+if [[ $noob == 1 ]]
+then
+:
+else
+clear
+echo
+echo -e "Decimal Battery v6.0"
+echo -e "--------------------"
+echo -e "Welcome"
+echo -e
+echo -e "Please enter a directory where the script"
+echo -e "can save it's files, this is a one-time setup"
+echo -e
+echo -e "default directory is"
+echo -e "$defsysdir"
+echo -e "leave empty for default"
+echo -e "you can edit it later in settings"
+echo -e
+read -e -p ">>>" iamnoob
+fi
+
+if [[ $iamnoob = /* ]]
+then
+sysdir=$iamnoob
+clear
+echo "successflly set settings directory to"
+echo "$sysidr"
+cd $sysdir
+rm -rf DecimalBatteryFiles
+mkdir DecimalBatteryFiles
+cd DecimalBatteryFiles
+rm -rf sysdir
+touch sysdir
+echo "$sysdir" >> sysdir
+
+cd /sdcard
+rm -rf .locator
+touch .locator
+echo "$sysdir" >> .locator
+
+cd $sysdir/DecimalBatteryFiles
+rm -rf noob
+touch noob
+echo "1" >> noob
+echo "folder successfully created"
+echo "sent 1 to noob, loacted at"
+echo "$sysdir/DecimalBatteryFiles"
+sleep 3
+clear
+elif [[ $iamnoob == 69 ]]
+then
+:
+elif [[ -z $iamnoob ]]
+then
+echo "settings directory is set to default"
+echo "$defsysdir"
+sysdir=$defsysdir
+cd $sysdir
+rm -rf DecimalBatteryFiles
+mkdir DecimalBatteryFiles
+cd DecimalBatteryFiles
+rm -rf sysdir
+touch sysdir
+echo "$sysdir" >> sysdir
+
+cd /sdcard
+rm -rf .locator
+touch .locator
+echo "$sysdir" >> .locator
+
+cd $sysdir/DecimalBatteryFiles
+rm -rf noob
+touch noob
+echo "1" >> noob
+echo "success"
+echo "for debugging: sent 1 to noob"
+echo "located at $sysdir/DecimalBatteryFiles"
+sleep 2
+else
+   echo "incorrect directory '$iamnoob'"
+   echo "it must start with a slash '/'"
+   echo "(so cd can understand it)"
+   sleep 2
+   clear
+   exit
+fi
+
+#default vars
+directory=/sdcard/DecimalBatteryFiles
+counter="charge_counter"
+wait=60
+defsysdir=/sdcard
+
+#important vars
+skipall=0
+counter_directory=/sys/class/power_supply/battery
+customsetup=0
+yeswait=0
+launchedasdefault=2
+root1="null"
+success=0
+plox="plox set var of me"
+yrbatt="${ORANGE}Your battery percentage is"
+one=1
+royna=1
+newlmao="default"
+mainmenu=1
+spamlog=1
+brc="/data/data/com.termux/files/usr/etc/bash.bashrc"
+
+#main menu
+while [[ $mainmenu == 1 ]] #mainmenu whele <-- [32 < 70]]
+do
+echo
+echo -e "Decimal Battery v6.0"
+echo -e "--------------------"
+echo -e "Choose an action"
+echo
+echo -e "1-> Start script"
+echo -e "2-> Quick start [ROOT]"
+echo -e "3-> Quick start [text only]"
+echo -e "4-> Settings"
+echo -e "5-> About"
+echo -e "6-> Drop calculator"
+echo
+echo -e "X-> Exit"
+echo
+read -e -p ">>>" main
+if [[ $main == x ]] #lowercase to uppercase
+then
+main=X
+fi
+
+if [[ $main == 6 ]] #AMOGOS
+then
+drop_io_old=`date +"%T"`
+yes_old=`date +"%s"`
+
+prcnt=`cat /sys/class/power_supply/battery/charge_counter`
+cd $sysdir/DecimalBatteryFiles
+prcnt2=`echo "scale=1; $prcnt / 30000" | bc`
+drop_prcnt_old="$prcnt2"
+
+ratio="click enter to calculate"
+fi
+
+while [[ $main == 6 ]]
+do
+cd $sysdir/DecimalBatteryFiles
+drop_io_new=`date +"%T"`
+prcntnew=`cat /sys/class/power_supply/battery/charge_counter`
+cd $sysdir/DecimalBatteryFiles
+prcnt2new=`echo "scale=1; $prcntnew / 30000" | bc`
+drop_prcnt_new="$prcnt2new"
+
+yes_new=`date +"%s"`
+cd $sysdir/DecimalBatteryFiles
+rm -rf ofc
+echo "scale=1; $yes_new - $yes_old" | bc >> ofc
+yes_new2=`cat ofc`
+
+cd $sysdir/DecimalBatteryFiles
+rm -rf final
+echo "scale=1; $drop_prcnt_old - $drop_prcnt_new" | bc >> final
+ratio=`cat final`
+
+clear
+echo
+echo -e "Decimal Battery v6.0"
+echo -e "--------------------"
+echo -e "Drop calculator"
+echo
+echo -e "Time since this opened: $drop_io_old"
+echo -e "Percentage since this opened: $prcnt2"
+echo
+echo -e "Time since last refresh: $drop_io_new"
+echo -e "Percentage since last refresh: $prcnt2new"
+echo -e "Dropped by: $ratio"
+echo -e "Time passed: $yes_new2"
+echo
+echo -e "Enter-> Refresh"
+echo
+echo -e "X-> Go back"
+echo
+read -e -p ">>>" rere
+if [[ -z $rere ]]
+then
+:
+elif [[ $rere == x ]]
+then
+main=0
+clear
+elif [[ $rere == X ]]
+then
+main=0
+clear
+fi
+done
+
+while [[ $main == 5 ]]
+do
+clear
+echo
+echo -e "Decimal Battery v6.0"
+echo -e "--------------------"
+echo -e "About"
+echo -e
+echo -e "Appreciate your potato phone and charger,"
+echo -e "by seeing your battery level increase"
+echo -e "10x times more precise, therefore..."
+echo -e "DecimalBattery it is!"
+echo -e
+echo -e "DecimalBattery is a script written in bash"
+echo -e "like you can read the goddamn github repo"
+echo -e "for information about this thing, else"
+echo -e "read the script to know yourself,"
+echo -e
+echo -e "I tried to enable enter to refresh in ROOT method,"
+echo -e "but turns out Termux has a funny bug when it comes to"
+echo -e "running 2 whele statements at the same time"
+echo -e "(to accept input whele waiting to refresh),"
+echo -e "it will keep spamming notification, and also"
+echo -e "even if you close the session, therefore"
+echo -e "only solution is force-stopping termux app"
+echo -e
+echo -e "some must commands:"
+echo -e "su -c setenforce 0"
+echo -e "pkg update"
+echo -e "pkg install bc"
+echo -e "pkg install bash"
+echo -e
+echo -e "please do message me on telegram: @BrudherBoard"
+echo -e "if wanna say anything, im often online"
+echo -e
+echo -e "press enter to go back to main menu"
+echo
+read -e -p ">>>" about
+if [[ -z $about ]]
+then
+clear
+main=0
+else
+echo "so it's hard to press enter?"
+echo "what do you mean with '$about'?"
+sleep 1.5
+fi
+done
+
+if [[ $main == 1 ]]
+then
+   break
+
+elif [[ $main == 4 ]]
+then
+   clear
+   settings=1
+   while [[ $settings == 1 ]] #sysdir settings option
+   do
+   clear
+   echo
+   echo -e "Decimal Battery v6.0"
+   echo -e "--------------------"
+   echo -e "Settings"
+   echo
+   echo -e "1-> Set settings directory"
+   echo -e "2-> Delete settings directory"
+   echo -e "3-> Set quick values"
+   echo -e "4-> Reset script"
+   echo -e "5-> Set enforce on/off"
+   echo
+   echo -e "X-> Go back"
+   echo -e
+   read -e -p ">>>" usure
+   if [[ $usure == x ]] #lowercase to uppercase
+   then
+   usure=X
+   fi
+   if [[ $usure == 1 ]]
+   then
+   clear
+   setsysdir=1
+   cd /sdcard
+   sysdir=`cat .locator`
+
+   elif [[ $usure == 5 ]]
+   then
+   FORCE=1
+
+   elif [[ $usure == 2 ]]
+   then
+   clear
+   remsysdir=1
+
+   elif [[ $usure == X ]] #a way to exit
+   then
+   settings=0
+   clear
+
+   elif [[ $usure == 3 ]]
+   then
+   sqv=1
+   clear
+
+   elif [[ $usure == 4 ]]
+   then
+   src=1
+
+   fi
+
+   while [[ $FORCE == 1 ]]
+   do
+   clear
+   echo
+   echo -e "Decimal Battery v6.0"
+   echo -e "--------------------"
+   echo -e "Enforce on/off"
+   echo
+   echo -e "Current state: $zxc"
+   echo -e "SafetyNet: $vbn"
+   echo -e "Script: $mkm"
+   echo
+   echo -e "1-> On"
+   echo -e "2-> Off"
+   echo
+   echo -e "X-> Go back"
+   echo
+   read -e -p ">>>" force1
+   if [[ $force1 == 1 ]]
+   then
+   su -c setenforce 1
+   zxc=`su -c getenforce`
+   vbn="Should Work"
+   mkm="Won't Work"
+   elif [[ $force1 == 2 ]]
+   then
+   su -c setenforce 0
+   zxc=`su -c getenforce`
+   vbn="Won't work"
+   mkm="Should work"
+   elif [[ $force1 == X ]]
+   then
+   FORCE=0
+   elif [[ $force1 == x ]]
+   then
+   FORCE=0
+   fi
+   done
+
+   while [[ $src == 1 ]]
+   do
+   clear
+   echo
+   echo -e "Decimal Battery v6.0"
+   echo -e "--------------------"
+   echo -e "Reset script"
+   echo
+   echo -e "will reset script and will be like first launch"
+   echo -e "useful if you have problems"
+   echo
+   echo -e "1->Proceed"
+   echo
+   echo -e "X->Go back"
+   echo
+   read -e -p ">>>" source
+   if [[ $source == 1 ]]
+   then
+   clear
+   sleep 0.5
+   rm -rf $sysdir/DecimalBatteryFiles
+   echo "deleted folder 'DecimalBatteryFiles'"
+   echo "located in $sysdir"
+   sleep 0.5
+   echo "dope"
+   echo "now start script again"
+   exit
+   elif [[ $src == X ]]
+   then
+   src=0
+   elif [[ $src == x ]] #lowercase
+   then
+   src=0
+   fi
+   done
+
+   while [[ $sqv == 1 ]]
+   do
+   clear
+   echo
+   echo -e "Decimal Battery v6.0"
+   echo -e "--------------------"
+   echo -e "Set quick values"
+   echo -e
+   echo -e "1-> Refresh interval"
+   echo -e "2-> Colored logs"
+   echo
+   echo -e "X-> Go back"
+   echo
+   read -e -p ">>>" sqv1
+   if [[ $sqv1 == x ]] #lowercase to uppercase
+   then
+   sqv1=X
+   fi
+
+   endloop=0
+   while [[ $sqv1 == 2 ]]
+   do
+   while [[ $endloop == 0 ]]
+   do
+      clear
+      echo
+      echo "Set to True if want colored logs upon quick start,"
+      echo "else set to False"
+      echo
+      echo -e "current value is: $colorful"
+      echo
+      echo "1-> True"
+      echo "2-> False"
+      echo
+      echo "X-> Go back"
+      echo
+      if [[ $nah == 1 ]]
+      then
+      echo "..."
+      fi
+      if [[ $colorful == "${truu}True${R}" ]]
+      then
+      sleep 0.2
+      colorful="True"
+      nah=0
+      elif [[ $colorful == "${fulss}False${R}" ]]
+      then
+      sleep 0.2
+      colorful="False"
+      nah=0
+      else
+      endloop=1
+      fi
+   done
+
+   read -e -p ">>>" colorful1
+   if [[ $colorful1 == x ]] #lowercase to uppercase
+   then
+   colorful1=X
+   fi
+   if [[ $colorful1 == 1 ]]
+   then
+      truu='\033[1;32m'
+      colorful="${truu}True${R}"
+      nah=1
+   cd $sysdir/DecimalBatteryFiles
+   rm -rf colorful
+   touch colorful
+   echo "True" >> colorful
+   endloop=0
+   elif [[ $colorful1 == 2 ]]
+   then
+      fulss='\033[1;31m'
+      colorful="${fulss}False${R}"
+      nah=1
+   cd $sysdir/DecimalBatteryFiles
+   rm -rf colorful
+   touch colorful
+   echo "False" >> colorful
+   elif [[ $colorful1 == X ]]
+   then
+   sqv1=0
+   endloop=1
+   else
+   clear
+   fi
+   endloop=0
+   done
+
+   if [[ $sqv1 == X ]]
+   then
+   sqv=0
+   fi
+
+   while [[ $sqv1 == 1 ]] #gotwait
+   do
+   clear
+   echo
+   echo "Enter wait interval... for quick start only,"
+   echo "as it's not going to affect non-quick methods"
+   echo
+   echo "Current value is $gotwait"
+   echo
+   echo "X-> Cancel"
+   echo
+   onlynumbersallowed='^[0-9]+$'
+   read -e -p ">>>" wait
+   if [[ $wait =~ $onlynumbersallowed ]]
+   then
+
+   cd $sysdir/DecimalBatteryFiles
+   rm -rf gotwait
+   touch gotwait
+   echo "$wait" >> gotwait
+   gotwait=$wait
+   clear
+
+   elif [[ $wait == X ]]
+   then
+   sqv1=0
+
+   elif [[ $wait == x ]]
+   then
+   sqv1=0
+
+   else
+   echo "unknown option '$wait',"
+   echo "accepted inputs are"
+   echo "Numbers [1 -> 9]"
+   echo "Letters [X - x]"
+   sleep 1.5
+   fi
+   done
+   done
+
+   while [[ $remsysdir == 1 ]]
+   do
+   echo
+   echo -e "Decimal Battery v6.0"
+   echo -e "--------------------"
+   echo -e "Remove settings directory"
+   echo -e
+   echo -e "Warning!"
+   echo -e "this will delete your custom settings,"
+   echo -e "and will revert back to default '$defsysdir'"
+   echo -e
+   echo -e "settings directory to be removed:"
+   echo -e "$sysdir/DecimalBatteryFiles"
+   echo -e
+   echo -e "1-> Proceed"
+   echo -e "2-> Cancel"
+   echo
+   read -e -p ">>>" sure
+   if [[ $sure == 1 ]]
+   then
+   clear
+   echo "deleting directory"
+   echo "$sysdir/DecimalBatteryFiles"
+   rm -rf $sysdir/DecimalBatteryFiles
+   echo "dope"
+   sleep 1.5
+   echo "making folder 'DecimalBatteryFiles' inside"
+   echo "$defsysdir"
+   cd $defsysdir
+   mkdir DecimalBatteryFiles
+   echo "dope"
+   sleep 1.5
+   remsysdir=0
+   cd DecimalBatteryFiles
+   rm -rf noob
+   touch noob
+   echo "1" >> noob
+   rm -rf sysdir
+   touch sysdir
+   echo "$defsysdir" >> sysdir
+
+   cd /sdcard
+   rm -rf .locator
+   touch .locator
+   echo "$defsysdir" >> .locator
+
+   elif [[ $sure == 2 ]]
+   then
+   clear
+   remsysdir=0
+   fi
+   done
+
+   while [[ $setsysdir == 1 ]] #entering directory
+   do
+   oldsysdir=$sysdir
+   echo
+   echo -e "Decimal Battery v6.0"
+   echo -e "--------------------"
+   echo -e "Set settings directory"
+   echo -e
+   echo -e "settings directory is the directory"
+   echo -e "where script saves it's settings,"
+   echo -e "will make a folder inside your"
+   echo -e "desired directory, named 'DecimalBatteryFiles'"
+   echo -e
+   echo -e "Current settings directory is"
+   echo -e "$sysdir"
+   echo -e
+   echo -e "Default settings directory is"
+   echo -e "$defsysdir"
+   echo -e "leave empty to apply it"
+   echo -e
+   read -e -p ">>>" sysdir
+   if [[ $sysdir = /* ]]
+   then
+   setsysdir=0
+   clear
+   echo "settings directory is set to"
+   echo "$sysdir"
+   sleep 1.5
+   echo "moving your old files from old directory"
+   echo "$oldsysdir"
+   echo "to new directory"
+   echo "$sysdir"
+
+   cd $oldsysdir/DecimalBatteryFiles #update sysdir before copy
+   rm -rf sysdir
+   touch sysdir
+   echo "$sysdir" >> sysdir #dope updating sysdir
+
+   cd $oldsysdir
+   cp -r DecimalBatteryFiles $sysdir
+   rm -rf DecimalBatteryFiles
+   sleep 1.5
+   echo "dope, now settings wil be read and written"
+   echo "in the directory"
+   echo "$sysdir"
+   cd /sdcard
+   rm -rf .locator
+   touch .locator
+   echo "$sysdir" >> .locator
+   sleep 2
+
+   elif [[ -z $sysdir ]] #if empty
+   then
+   sysdir="/sdcard"
+   setsysdir=0
+   clear
+   echo "settings directory is set to default"
+   echo "$defsysdir"
+   sleep 1.5
+   echo "moving your old files from old directory"
+   echo "$oldsysdir"
+   echo "to new directory"
+   echo "$sysdir"
+
+   cd $oldsysdir/DecimalBatteryFiles #update sysdir before copy
+   rm -rf sysdir
+   touch sysdir
+   echo "$sysdir" >> sysdir #dope updating sysdir
+
+   cd $oldsysdir
+   cp -r DecimalBatteryFiles $sysdir
+   rm -rf DecimalBatteryFiles
+   sleep 1.5
+   echo "dope, now settings wil be read and written"
+   echo "in the directory"
+   echo "$sysdir"
+   cd /sdcard
+   rm -rf .locator
+   touch .locator
+   echo "$sysdir" >> .locator
+   sleep 2
+
+   fi
+   done #entering a directory is dope
+
+   done #sysdir settings option dope
+
+elif [[ $main == 2 ]] #back to mainmenu-----------------
+then
+   clear
+   textonly=0
+   skipall=1
+   quickly=1
+   launchedasdefault=70
+   break
+elif [[ $main == 3 ]]
+then
+   clear
+   skipall=1
+   textonly=1
+   wait="no refresh in textonly"
+   royna=3
+   quickly=1
+   launchedasdefault=70
+   break
+elif [[ $main == 0 ]]
+then
+:
+elif [[ $main == X ]]
+then
+clear
+exit
+else
+   echo "I do need a number from above"
+   echo "you entered '$main'"
+   sleep 1.5
+   clear
+fi
+done #mainmenu whele dope <-- [70 > 32]
+
+if [[ $skipall == 1 ]] #begin of skipping biased lol
+then
+:
+else
+#want colors?
+meme=1
+while [[ $meme == 1 ]] #start of meme
+do
+clear
+echo
+echo -e "Decimal Battery v6.0"
+echo -e "--------------------"
+echo -e "Want logs in colors?"
+echo
+echo -e "1-> Yes ofc"
+echo -e "2-> No bruh"
+echo
+read -e -p ">>>" colorok1
+
+if [[ $colorok1 == 1 ]]
+then
+   colorok2=1
+   clear
+   meme=0
+elif
+   [[ $colorok1 == 2 ]]
+then
+   colorok2=0
+   clear
+   meme=0
+else
+   echo "I needed a number from above, although"
+   echo "you typed $colorok1"
+   sleep 2
+fi
+done #end of meme
+
+#enable or disable colors based on colorok2
+if [[ $colorok2 == 1 ]]
+then
+   clear
+   RED='\033[0;31m'
+   GREEN='\033[0;32m'
+   ORANGE='\033[0;33m'
+   BLUE='\033[0;34m'
+   PURPLE='\033[0;35m'
+   CYAN='\033[0;36m'
+   LIGHTGRAY='\033[0;37m'
+   DARKGRAY='\033[1;30m'
+   LIGHTRED='\033[1;31m'
+   LIGHTGREEN='\033[1;32m'
+   YELLOW='\033[1;33m'
+   LIGHTBLUE='\033[1;34m'
+   LIGHTPURPLE='\033[1;35m'
+   LIGHTCYAN='\033[1;36m'
+   WHITERED='\033[1;37m'
+   R='\033[0m'
+   echo -e "${LIGHTGREEN}Decimal Battery v6.0${R}"
+   echo -e "${YELLOW}--------------------${R}"
+   echo -e "${GREEN}Colored logs activated, press any key to continue${YELLOW}"
+   echo -e "${GREEN}Tip: for quick start setup, navigate to settings${YELLOW}"
+   echo -e
+   read -e -p ">>>" less
+
+fi #when did i write that fi lmfao
+
+if [ -z less ]]
+then
+   clear
+else
+   clear
+fi
+
+#Method Prompt
+pi=1
+while [[ $pi == 1 ]] #LMFAO
+do
+echo
+echo -e "${LIGHTGREEN}Decimal Battery v6.0${R}"
+echo -e "${YELLOW}--------------------${R}"
+echo -e "${GREEN}Choose Method${R}"
+echo
+echo -e "${CYAN}1-> ${LIGHTRED}ROOT${R}"
+echo -e "${CYAN}2-> ${LIGHTCYAN}No ROOT${R}"
+echo -e "${CYAN}3-> ${DARKGRAY}Text Only${YELLOW}"
+echo
+read -e -p ">>>" prompt
+
+if [[ $prompt == 1 ]]
+then
+   clear
+   textonly=0
+   root1=1
+   plox="${LIGHTRED}ROOT${R}"
+   royna=1
+   pi=0
+elif [[ $prompt == 2 ]]
+then
+   clear
+   plox="${LIGHTCYAN}No ROOT${R}"
+   royna=0
+   textonly=0
+   pi=0
+   root1=0
+elif [[ $prompt == 3 ]]
+then
+   clear
+   pi=0
+   root1=3
+   royna=3
+   textonly=1
+   wait="no refresh in textonly"
+   plox="${DARKGRAY}Text Only${R}"
+else
+   echo "wdym $prompt ? i need a number from above"
+   sleep 1.5
+   clear
+fi
+done
+#NoRoot Method
+if [[ $root1 == 1 ]]
+then
+clear
+fishhint="Made by @BrudherBoard on Telegram lmfao"
+fi
+
+#Root
+if [[ $root1 == 0 ]]
+then
+clear
+fishhint="Made by @BrudherBoard on Telegram lmfao"
+fi
+
+#Text Only
+if [[ $root1 == 3 ]]
+then
+   textonly=1
+   wait="no refresh in textonly"
+   clear
+fi
+
+#Universal
+omg=1
+while [[ $omg == 1 ]]
+do
+if [[ $omg == 1 ]]
+then
+   echo
+   echo -e "${LIGHTGREEN}Decimal Battery v6.0 [${plox}${LIGHTGREEN}]"
+   echo -e "${YELLOW}---------------------------"
+   echo -e "${GREEN}∆∆∆ Setup"
+   echo
+   echo -e "${CYAN}1-> ${LIGHTCYAN}Default Setup"
+   echo -e "${CYAN}2-> ${LIGHTPURPLE}Custom Setup${YELLOW}"
+   echo
+   read -e -p ">>>" naw
+   if [[ $naw == 1 ]]
+   then
+      clear
+      success=1
+      launchedasdefault=1
+      omg=0
+      customsetup=0
+   elif [[ $naw == 2 ]]
+   then
+      clear
+      customsetup=1
+      omg=0
+   else
+      echo "I need a number from above, you entered $naw"
+      sleep 2
+      clear
+   fi
+fi
+done
+
+if [[ $customsetup == 1 ]]
+then
+   directory="$sysdir"
+   yeswait=1
+elif [[ $customsetup == 0 ]]
+then
+   :
+else
+   echo "var customsetup should be 1, it's '$customsetup'"
+   sleep 3
+   clear; exit
+fi
+if [[ $yeswait == 1 ]]
+then
+   pi2=1
+   onlynumbersallowed='^[0-9]+$'
+   while [[ $pi2 == 1 ]] #start of pi2
+   do
+   clear
+   echo
+   echo -e "${LIGHTPURPLE}Custom Setup${R}"
+   echo -e "${LIGHTCYAN}Enter wait interval (in seconds)${R}"
+   echo -e "${LIGHTCYAN}Wait interval is the amount of time to wait"
+   echo -e "before refreshing the percentage${R}"
+   echo
+   echo -e "${CYAN}default wait is $wait, but i recommend more than 60 ${R}"
+   echo -e "${CYAN}if you have 2GB ram or less ${R}"
+   echo
+   echo -e "${CYAN}leave blank for default directory${YELLOW}"
+   echo
+   read -e -p ">>>" wait
+   if [[ -z $wait ]]
+   then
+      wait=60
+      echo -e "${YELLOW}Using default wait value $wait ${R}"
+      sleep 0.5
+      pi2=0
+      launchedasdefault=0
+
+   elif [[ $wait =~ $onlynumbersallowed ]]
+   then
+      launchedasdefault=0
+      success=1
+      sleep 1.5
+      pi2=0
+   else
+      echo -e "${LIGHTRED}enter wait value in numbers only!${R}"
+      echo -e "for debugging: wait var is now '$wait'"
+   sleep 2
+   fi
+
+   done #end of pi2
+   fi
+fi
+
+#edit newlmao based on launch type
+clear
+if [[ $launchedasdefault == 1 ]]
+then
+   newlmao="${GREEN}default${R}"
+elif [[ $launchedasdefault == 0 ]]
+then
+   newlmao="${LIGHTPURPLE}custom${R}"
+elif [[ $launchedasdefault == 70 ]]
+then
+   newlmao="${GREEN}quick${R}"
+else
+   echo -e "${RED}lunched as def is neither 1 nor 0${R}"
+   clear; exit
+fi
+
+#---------end of skipper (that biased one yes)----------
+
+
+if [[ $skipall == 1 ]]
+then
+   if [[ $colorful == "True" ]]
+   then
+   RED='\033[0;31m'
+   GREEN='\033[0;32m'
+   ORANGE='\033[0;33m'
+   BLUE='\033[0;34m'
+   PURPLE='\033[0;35m'
+   CYAN='\033[0;36m'
+   LIGHTGRAY='\033[0;37m'
+   DARKGRAY='\033[1;30m'
+   LIGHTRED='\033[1;31m'
+   LIGHTGREEN='\033[1;32m'
+   YELLOW='\033[1;33m'
+   LIGHTBLUE='\033[1;34m'
+   LIGHTPURPLE='\033[1;35m'
+   LIGHTCYAN='\033[1;36m'
+   WHITERED='\033[1;37m'
+   R='\033[0m'
+   fi
+fi
+#quick start thingy
+clear
+if [[ $quickly == 1 ]]
+then
+wait="reading quick values..."
+fi
+
+#logs ui
+while [[ $spamlog == 1 ]]
+do
+clear
+echo
+echo -e "${LIGHTGREEN}Running with $newlmao ${LIGHTGREEN}settings ${R}"
+echo
+echo -e "${GREEN}Settings directory${CYAN} -> ${LIGHTCYAN}$sysdir"
+if [[ $textonly == 1 ]]
+then
+:
+else
+echo -e "${GREEN}Refresh interval${CYAN} -> ${LIGHTCYAN}$wait${R}"
+fi
+if [[ $textonly == 1 ]]
+then
+echo -e "${YELLOW}Tips"
+echo -e "${ORANGE}Type ${WHITERED}exit${ORANGE} to go back"
+echo -e "Press ${WHITERED}enter${ORANGE} to refresh"
+echo -e "Type ${WHITERED}clear${ORANGE} to clean up logs${R}"
+else
+echo -e "${PURPLE}Made by ${CYAN}@BrudherBoard ${PURPLE}on ${LIGHTBLUE}Telegram${R}"
+fi
+echo
+
+#friendly excuse of logs
+echo -e "${GREEN}logs below${R}"
+echo -e "${YELLOW}-------------------------------------${R}"
+
+#quick start thingy again
+if [[ $wait == "reading quick values..." ]]
+then
+sus="$wait"
+sleep 0.3
+fi
+
+if [[ $quickly == 1 ]]
+then
+wait=`cat $sysdir/DecimalBatteryFiles/gotwait`
+quickly=0
+else
+spamlog=0
+if [[ -z $gotwait ]]
+then
+if [[ $launchedasdefault == 1 ]]
+then
+:
+else
+echo -e "${LIGHTRED}[X]wait value is invalid"
+sleep 0.7
+echo -e "${YELLOW}[!]set quick values from settings first"
+sleep 2
+clear; exit
+fi
+else
+echo -e "${LIGHTBLUE}[∆]reading $sysdir for quick values"
+sleep 0.3
+if [[ $textonly == 1 ]]
+then
+:
+else
+echo -e "${LIGHTBLUE}[∆]setting wait value to $wait"
+fi
+sleep 0.3
+fi
+fi
+if [[ $sus == "reading quick values..." ]]
+then
+echo -e "${LIGHTBLUE}[∆]updating values above"
+sus=nou
+sleep 0.7
+fi
+done
+
+#show a basic line of text
+if [[ $textonly == 1 ]]
+then
+   echo -e  "${LIGHTBLUE}[∆]starting services${R}"
+   sleep 0.3
+else
+   echo -e "${GREEN}[•]notification service started!${R}"
+   sleep 0.2
+   echo -e "${LIGHTGREEN}[+]all services started successfully${R}"
+fi
+
+#send notification; clean up; loop every $wait
+if [[ $royna == 1 ]]
+then
+   while true
+   do
+   board1=`cat $counter_directory/$counter`
+   board2=`echo "scale=1; $board1 / 30000" | bc`
+   echo -e "${LIGHTBLUE}[∆]requesting battery percentage"
+   sleep 0.1
+   echo -e "${LIGHTBLUE}[∆]sending notification${R}"
+   su -lp 2000 -c "cmd notification post -S bigtext -t 'Battery Percentage' 'DecimalPercentage' '$board2'"
+   rm -rf $counter
+   echo -e "${GREEN}[+]notification sent successfully${R}"
+   echo -e "${LIGHTBLUE}[∆]waiting for $wait seconds"
+   sleep $wait
+   done
+elif [[ $royna == 0 ]]
+then
+   while true; do cmd notification post fag tag $board2; sleep $wait; done;
+   echo
+   echo -e "${LIGHTPURPLE}BETA - Might not work${R}"
+elif [[ $textonly == 1 ]]
+then
+   letsgo=1
+else
+   echo -e "${RED}ERROR - NOTIFICATION NOT SENT${R}"
+   echo -e "${RED}failed because royna is neither 0 nor 1${R}"
+fi
+
+#enter to refresh system for text only type
+if [[ $letsgo == 1 ]]
+then
+   echo -e "${GREEN}[•]Enter-To-Refresh service started!${R}"
+   sleep 0.3
+   echo -e "${LIGHTGREEN}[+]all services started ${R}"
+   sleep 0.1
+   echo -e "${YELLOW}[!]press enter to proceed ${R}"
+   while true
+   do read popo
+   if [[ -z $popo ]]
+   then
+      echo -e "${LIGHTBLUE}[∆]requesting battery percentage"
+      board1=`cat $counter_directory/$counter`
+      board2=`echo "scale=1; $board1 / 30000" | bc`
+      sleep 0.1
+      io=`date`
+      echo -e "${LIGHTCYAN}[=]As from${R}"
+      echo -e "[~]${LIGHTGRAY}$io${R}"
+      echo -e "${LIGHTCYAN}[=]$yrbatt${R}"
+      echo -e "${CYAN}[%]$board2${R}"
+      if [[ -z $board2 ]]
+      then
+      echo -e "${LIGHTRED}[X]ERROR - permission denied"
+      sleep 0.3
+      if [[ $zxc == "Permissive" ]]
+      then
+      echo -e "${LIGHTRED}[X]unable to access file, is root granted?${R}"
+      elif [[ $zxc == "Enforcing" ]]
+      then
+      echo -e "${YELLOW}[!]check about for detailed info that might fix${R}"
+      else
+      echo -e "${LIGHTRED}[X]unknown SELinux state, is root granted?"
+      fi
+      fi
+   elif [[ $popo == "exit" ]]
+   then
+      clear
+      break 1
+   elif [[ $popo == "clear" ]]
+   then
+      echo -e "${YELLOW}[!]cleaning logs ${R}"
+      sleep 0.4
+      clear
+      echo
+      echo -e "${LIGHTGREEN}Running with $newlmao ${LIGHTGREEN}settings ${R}"
+      echo
+      echo -e "${GREEN}settings directory${CYAN} -> ${LIGHTCYAN}$sysdir"
+      echo -e "${GREEN}Refresh interval${CYAN} -> ${LIGHTCYAN}$wait"
+      echo
+      if [[ $textonly == 1 ]]
+      then
+      echo -e "${YELLOW}Tips"
+      echo -e "Type ${WHITERED}exit${ORANGE} to go back"
+      echo -e "Press ${WHITERED}enter${ORANGE} to refresh"
+      echo -e "Type ${WHITERED}clear${ORANGE} to clean up logs${R}"
+      else
+      echo -e "${PURPLE}Made by ${CYAN}@BrudherBoard ${PURPLE}on ${LIGHTBLUE}Telegram${R}"
+      fi
+      echo
+      echo -e "${GREEN}logs below${R}"
+      echo -e "${YELLOW}-------------------------------------${R}"
+   fi
+   done
+fi
+done #dope whele dead
