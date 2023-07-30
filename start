@@ -13,14 +13,16 @@ echo "==============="
 echo "Select a script"
 echo
 echo "1-> Decimal Battery"
+echo "2-> Decimal Battery Clean"
 echo "2-> Battery Level Changer"
 echo "3-> IP Address Adder"
 echo "X-> Exit"
 echo
 read -e -p ">>>" ban
-blud 1 "file=DecimalBattery"
-blud 2 "file=BatteryLevelChanger"
-blud 3 "file=IPAdd"
+blud 1 "file=DB"
+blud 2 "file=DBC"
+blud 3 "file=BLC"
+blud 4 "file=IPA"
 blud x "exit"
 blud X "exit"
 chmod +x ${file} && chmod 777 ${file} && ./${file}
