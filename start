@@ -14,8 +14,8 @@ echo "Select a script"
 echo
 echo "1-> Decimal Battery"
 echo "2-> Decimal Battery Clean"
-echo "2-> Battery Level Changer"
-echo "3-> IP Address Adder"
+echo "3-> Battery Level Changer"
+echo "4-> IP Address Adder"
 echo "X-> Exit"
 echo
 read -e -p ">>>" ban
