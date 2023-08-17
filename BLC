@@ -1,0 +1,95 @@
+#!/bin/bash
+
+virgin=1
+function getbatt () { su -c dumpsys battery get level;}
+function smh () { echo "Your battery level: ${gabu}";if [[ $virgin == 1 ]] then :;else echo "Original Level: ${gabu_og}";fi;}
+gabu_og=`getbatt`
+
+while true
+do
+   gabu=`getbatt`
+   clear
+   echo "Battery Level Changer v1"
+   echo "========================"
+   smh
+   echo
+   echo "1-> Start script"
+   echo "2-> Setup script"
+   echo "3-> Exit"
+   read -e -p ">>>" royna
+
+   if [[ $royna == 1 ]]
+   then
+
+      while [[ $royna == 1 ]]
+      do
+         gabu=`getbatt`
+         clear
+         echo "Battery Level Changer v1"
+         echo "========================"
+         smh
+         echo
+         echo "1-> Change battery level"
+         echo "2-> Reset to default"
+         echo "3-> Go back"
+         read -e -p ">>>" kevios
+         if [[ $kevios == 1 ]]
+         then
+            clear
+            echo "Battery Level Changer v1"
+            echo "========================"
+            echo "Enter a number below"
+            echo
+            read -e -p ">>>" alex
+            if [[ -z $alex ]]
+            then
+               echo "Enter some number bro..."
+               sleep 2
+            else
+               su -c dumpsys battery set level $alex
+               kevios=0
+               virgin=0 #ohno
+            fi
+         elif [[ $kevios == 2 ]]
+         then
+            su -c dumpsys battery reset level
+            virgin=1 #ohyes
+         elif [[ $kevios == 3 ]]
+         then
+            break
+         fi
+      done
+
+   elif [[ $royna == 2 ]]
+   then
+      clear
+      echo "Battery Level Changer v1"
+      echo "========================"
+      echo "Set up script"
+      echo
+      echo "you need root access, no additional packages or stuff"
+      echo "so please do grant root to Termux"
+      echo
+      echo "Enter-> Try to grant root to Termux"
+      echo "Any Other Key-> Go back"
+      read -e -p ">>>" oke
+      if [[ -z $oke ]]
+      then
+         lmao=`getbatt`
+         if [[ -z $lmao ]]
+         then
+            echo "Requesting battery percentage returned a blank value"
+            echo "therefore, root is not granted to Termux"
+            sleep 2
+         else
+            echo "Success!"
+            echo "Battery request from su returned value ${lmao}"
+            sleep 2
+         fi
+      fi
+   elif [[ $royna == 3 ]]
+   then
+      clear
+      exit
+   fi #roynatech if
+done #while true done
