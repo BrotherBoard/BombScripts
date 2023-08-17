@@ -1,0 +1,262 @@
+#!/bin/bash
+brc="/data/data/com.termux/files/usr/etc/bash.bashrc"
+dir="/sys/class/power_supply/battery/charge_counter"
+NUMBER='^[0-9]+$'
+
+# BRC SAVE SAVE_NAME SAVE_VALUE
+# VARIABLE=`BRC LOAD SAVE_NAME`
+# BRC REMOVE SAVE_NAME
+function BRC () {
+ if [[ $1 == "SAVE" ]]
+ then
+  echo -e "#<DecimalBattery_$2>$3</DecimalBattery_$2>" >> $brc
+ elif [[ $1 == "LOAD" ]]
+  then
+  cat $brc | grep -o -P "(?<=#<DecimalBattery_$2>).*(?=</DecimalBattery_$2>)"
+ elif [[ $1 == "REMOVE" ]]
+ then
+  sed -i "/#<DecimalBattery_$2>/d" $brc
+ fi
+}
+virgin=`BRC LOAD virgin`
+
+# VAR=`GET` #ex. 16.7
+# VAR=`GET -NRM` #ex. 16 (normal)
+# VAR=`GET -ADV` #ex. 167 (no decimal digit)
+function GET () {
+ if [[ $1 == "-NRM" ]]
+ then
+  lu1=`cat $dir`;lu3=`echo $((${lu1} / 30000))`;echo $lu3
+ elif [[ $1 == "-ADV" ]]
+ then
+  lu1=`cat $dir`;lu2=`echo $((${lu1} / 3000))`;echo $lu2
+ else
+  lu1=`cat $dir`;lu2=`echo $((${lu1} / 3000))`;lu3=`echo $((${lu1} / 30000))`;lu4=`echo $((${lu3} * 10))`;lu5=`echo $((${lu2} - ${lu4}))`;echo "${lu3}.${lu5}"
+ fi
+}
+
+# COND VAR VALUE ON_EQUAL ON_ELSE_OPTIONAL
+# COND -X VAR
+function COND () {
+ if [[ $1 == "-C" ]];then
+ if [[ $2 == "c" ]];then clear; elif [[ $2 == "C" ]]; then clear;fi;if [[ -z $3 ]]; then :;else $3;fi;fi;if [[ $1 == "-X" ]];then if [[ $2 == "x" ]];then clear && exit; elif [[ $2 == "X" ]];then clear && exit;fi;else if [[ $1 == $2 ]];then $3;else if [[ -z $4 ]];then :;else $4;fi;fi;fi
+}
+
+function SET_NO () {
+ su -c dumpsys battery reset
+}
+
+function SET () {
+ su -c dumpsys battery set level $1
+}
+
+function SAFE_TOG () {
+ if [[ $virgin == 1 ]]
+ then
+  BRC REMOVE virgin
+  virgin=0
+  BRC SAVE VIRGIN $virgin
+ else
+  BRC REMOVE virgin
+  virgin=1
+  BRC SAVE VIRGIN $virgin
+ fi
+}
+
+function DB () {
+ if [[ $1 == "NOTIFY" ]]; then
+  PRINT 1
+  while true;do
+   LEVEL=`GET`
+   su -lp 2000 -c "cmd notification post -S bigtext -t 'Battery Percentage' 'DecimalPercentage' '$LEVEL'"
+   echo -e "[OK]Attempted to post notification with level '$LEVEL'"
+   echo -e "[ZZ]Sleeping for '$WAIT' second(s)"
+   sleep $WAIT
+   echo
+  done
+ elif [[ $1 == "TEXT" ]]; then
+  PRINT 2
+  while true;do
+  read TEXT_1
+  if [[ $TEXT_1 == x ]];then break; elif [[ $TEXT_1 == X ]]; then break; fi
+  COND -C $TEXT_1 "PRINT 2"
+  if [[ -z $TEXT_1 ]]; then
+   LEVEL=`GET`
+   echo -e "[%]$LEVEL"
+  fi
+  done
+ elif [[ $1 == "NICE" ]]
+ then
+  PRINT 3
+  while true
+  do
+   NICE_1=`GET`
+   NICE_2=`GET -ADV`
+   NICE_3=`GET -NRM`
+   echo "[!]Detected battery level ${NICE_1}"
+   if [[ $NICE_3 -gt 5 ]]
+   then
+    SET $NICE_2
+    echo "[!]Attempted to set battery level to ${NICE_2}"
+    echo "[ZZZ]Sleeping for '${WAIT}' second(s)"
+    sleep $WAIT
+   else
+    if [[ $virgin == 1 ]]
+    then
+     echo "[!]Safety limit is enabled in settings, committing action"
+     echo "[N]Battery level is less than 5%"
+     SET_NO
+     echo "[!]Resetted battery to normal level"
+     echo "[!]Charge your device, or desable safety limit in settings"
+     echo "[!]Press any key to go back"
+     read FlorinelulX123
+     break
+    elif [[ $virgin == 0 ]]
+    then
+     echo "[!]Safety limit is disabled in settings, no further action is committed"
+     echo "[!]Will continue to work, this is a low battery warning"
+     SET $NICE_2
+     echo "[!]Attempted to set battery level to ${NICE_2}"
+     echo "[ZZZ]Sleeping for '${WAIT}' second(s)"
+     sleep $WAIT
+    fi
+   fi
+   echo
+  done
+ fi
+}
+
+# WAIT_CONF
+function WAIT_CONF () {
+ while true
+ do
+ PRINT 4_1
+ read -e -p ">>>" WAIT_CONF_1
+ if [[ $WAIT_CONF_1 == x ]];then break;elif [[ $WAIT_CONF_1 == X ]]; then break; fi
+ if [[ $WAIT_CONF_1 =~ $NUMBER ]]; then WAIT=$WAIT_CONF_1; else echo "Numbers only" && sleep 1.5;fi
+ BRC REMOVE Refresh;BRC SAVE Refresh $WAIT_CONF_1
+ done
+}
+
+# RESET_CONF
+function RESET_CONF () {
+ clear;echo "Are you sure you wanna reset script?";echo;echo "1-> yes";echo "2-> no";read -e -p ">>>" RESET_CONF_1; if [[ $RESET_CONF_1 == 1 ]];then BRC REMOVE "IExist";BRC REMOVE "Refresh";echo "done, script will now exit";sleep 1.5;SET_NO;exit;fi
+}
+
+# RESET_BATT
+function RESET_BATT () {
+ SET_NO
+ RESET_BATT_1=`su -c dumpsys battery get level`
+ echo "Successfully restored real battery level '${RESET_BATT_1}'"
+ sleep 1.3
+}
+
+# SETTINGS_CONF
+function SETTINGS_CONF () {
+ while true
+ do
+ PRINT 4
+ read -e -p ">>>" SETTINGS_CONF_1
+ if [[ $SETTINGS_CONF_1 == x ]];then break;elif [[ $SETTINGS_CONF_1 == X ]]; then break; fi
+ if [[ $SETTINGS_CONF_1 == 1 ]]; then WAIT_CONF; elif [[ $SETTINGS_CONF_1 == 2 ]]; then RESET_CONF;elif [[ $SETTINGS_CONF_1 == 3 ]]; then RESET_BATT; fi
+ if [[ $SETTINGS_CONF_1 == 4 ]]; then SAFE_TOG;fi
+ done
+}
+
+TESTFOR_1=`BRC LOAD IExist`
+if [[ -z $TESTFOR_1 ]]
+then
+ virgin=1
+ BRC SAVE virgin 1
+ clear;echo "Welcome to Decimal Battery";echo;echo "For this script to work you must:";echo "-> Grant root access to Terminal";echo;echo "which can be done by:";echo "-> su -c pwd";echo;echo "Enter -> Don't show this again"
+ echo;read -e -p ">>>" PAGE_0
+ if [[ -z $PAGE_0 ]]
+  then
+  BRC SAVE IExist A10isBETTERthanA90
+ fi
+fi
+TESTFOR_2=`BRC LOAD Refresh`
+if [[ -z $TESTFOR_2 ]]
+then
+ BRC SAVE Refresh 10
+ WAIT=10
+else
+ WAIT=$TESTFOR_2
+fi
+
+function PRINT () {
+ if [[ $1 == 0 ]]
+ then
+  clear
+  echo "Decimal Battery [Clean]"
+  echo "======================="
+  echo "1-> As A Notify"
+  echo "2-> In Terminal"
+  echo "3-> Next To Battery"
+  echo "4-> Settings"
+  echo "X-> Exit";echo
+ elif [[ $1 == 1 ]]
+ then
+  clear
+  echo "Decimal Battery [Notify]"
+  echo "========================"
+  echo "Logs";echo
+ elif [[ $1 == 2 ]]
+ then
+  clear
+  echo "Decimal Battery [Terminal]"
+  echo "=========================="
+  echo "Logs";echo
+  echo "[!]Press enter to refresh"
+  echo "[!]Press C to clear"
+  echo "[!]Press X to Go back"
+ elif [[ $1 == 3 ]]
+ then
+  clear
+  echo "Decimal Battery [SystemUI]"
+  echo "=========================="
+  echo "Things to keep in mind"
+
+  echo "Restore normal battery in settings, or by executing:"
+  echo "'su -c dumpsys battery reset'";echo
+  echo "Battery level is a FLOAT value, which means it only accepts numbers,"
+  echo "if battery is 32.7 then level would be 327 (without dot)"
+  echo
+  echo "Logs:";echo
+ elif [[ $1 == 4 ]]
+ then
+  clear
+  echo "Decimal Battery [Config]"
+  echo "========================"
+  echo "Settings"
+  echo
+  echo "1-> Set Refresh"
+  echo "2-> Reset Script"
+  echo "3-> Reset Battery"
+  if [[ $virgin == 1 ]]
+  then
+   echo "4-> Disable Safety Limit"
+  else
+   echo "4-> Enable Safety Limit"
+  fi
+  echo "X-> Go Back"
+ elif [[ $1 == 4_1 ]]
+ then
+  clear
+  echo "Decimal Battery [Config]"
+  echo "========================"
+  echo "Set Refresh"
+  echo -e "Current Value: $WAIT"
+  echo "X-> Go back";echo
+ fi
+}
+
+while true;do
+ PRINT 0
+ read -e -p ">>>" PAGE_1
+ COND -X $PAGE_1
+ COND $PAGE_1 1 "DB NOTIFY"
+ COND $PAGE_1 2 "DB TEXT"
+ COND $PAGE_1 3 "DB NICE"
+ COND $PAGE_1 4 "SETTINGS_CONF"
+done
