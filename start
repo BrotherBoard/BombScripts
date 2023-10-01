@@ -16,6 +16,7 @@ echo "1-> Decimal Battery"
 echo "2-> Decimal Battery Clean"
 echo "3-> Battery Level Changer"
 echo "4-> IP Address Adder"
+echo "5-> Display Resolution Changer"
 echo "X-> Exit"
 echo
 read -e -p ">>>" ban
@@ -23,6 +24,7 @@ blud 1 "file=DB"
 blud 2 "file=DBC"
 blud 3 "file=BLC"
 blud 4 "file=IPA"
+blud 5 "file=DRC"
 blud x "exit"
 blud X "exit"
 chmod +x ${file} && chmod 777 ${file} && ./${file}
