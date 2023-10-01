@@ -5,6 +5,7 @@ i was tired of finding the files and stuff so i combined them to one file that o
 
 usage: ``pkg update && pkg upgrade && pkg install git && git clone https://github.com/BrotherBoard/BombScripts && cd BombScripts && bash start``
 
+Note: DecimalBattery is deprecated, and its not guaranteed to show correct values, in that case you can use Decimal Battery app in BombApps
 
 **included scripts:**
 
