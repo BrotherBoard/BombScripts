@@ -20,5 +20,5 @@ over su, change your battery level to something idk
 **IP Address Adder:**
 for localhosting and stuff, easier IP address management
 
-**Display Resolution Changer**
+**Display Resolution Changer:**
 for changing the resolution and density of your device in an easy way
