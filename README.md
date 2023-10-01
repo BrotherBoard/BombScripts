@@ -1,5 +1,5 @@
 # BombScripts
-A few scripts in one place
+A few scripts i made, in one place.
 
 i was tired of finding the files and stuff so i combined them to one file that opens them for me.
 
