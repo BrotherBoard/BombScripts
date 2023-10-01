@@ -1,0 +1,121 @@
+#!/bin/bash
+while true; do clear
+BYellow='\033[1;33m';R='\033[0m'
+function kk () { while [[ $kk_v -lt $2 ]];do kk_v=$((kk_v+1));echo -n -e ${BYellow}${1}${R};done;unset kk_v;echo;}
+function cline () { cline_v=$1;
+if [[ -z $cline_v ]]; then cline_v=1; else
+cline_v=$((cline_v + 1))
+counter=1
+while [[ $counter -lt $cline_v ]]; do
+counter=$((counter+1))
+echo -en "\033[1A\033[2K";done
+fi
+}
+BGreen='\033[1;32m'
+Cyan='\033[0;96m'
+Cayan='\033[0;36m'
+echo -e "${BGreen}Display Resolution Changer${R}";kk = 26
+size_d=(`su -c wm size`)
+density_d=(`su -c wm density`)
+size=${size_d[2]}
+size_e=a${size}b
+oxres=`echo $size_e | grep -o -P '(?<=a).*(?=x)'`
+oyres=`echo $size_e | grep -o -P '(?<=x).*(?=b)'`
+density=${density_d[2]}
+psize=${size_d[5]}
+pdensity=${density_d[5]}
+if [[ -z $psize ]] && [[ -z $pdensity ]]; then # original state
+echo -e "${Cyan}Current state:${Cayan} original";echo
+echo -e "${Cyan}Current resolution:${Cayan} $size"
+echo -e "${Cyan}Current density:${Cayan} $density"
+else # modified state
+if [[ -z $psize ]]; then psize=$size; fi
+echo -e "${Cyan}Current state:${Cayan} modified";echo
+echo -e "${Cyan}Current resolution:${Cayan} $psize"
+echo -e "${Cyan}Current density:${Cayan} $pdensity";echo
+echo -e "${Cyan}Original resolution:${Cayan} $size"
+echo -e "${Cyan}Original density:${Cayan} $density"
+fi
+kk = 26
+echo -e "\033[0;46m1-> Change resolution"
+echo -e "\033[0;44m2-> Change density" #meow
+echo -e "\033[0;101m3-> Reset all"
+echo -e "\033[45m4-> Exit${R}"
+echo;echo -en "${BYellow}>>>${Cayan}" && read lmao
+if [[ $lmao == 1 ]]; then cline 6 && work=1
+elif [[ $lmao == 2 ]]; then cline 6 && work=2
+elif [[ $lmao == 3 ]]; then su -c wm reset && sleep 1
+elif [[ $lmao == 4 ]]; then clear;exit
+fi
+
+if [[ $work == 2 ]]; then
+unset work
+while true; do
+echo -e -n "${Cyan}New density:${Cayan} "
+read den_inp; cline 1
+if [[ -z $den_inp ]]; then :
+else break
+fi
+done
+echo -e "${Cyan}New density: ${Cayan}$den_inp";kk = 26
+echo -e "\033[0;46m1-> Proceed"
+echo -e "\033[0;101m2-> Cancel & exit"
+echo -e "\033[45m3-> Go back${R}"
+echo;echo -en "${BYellow}>>>${Cayan}"
+read eta2
+if [[ $eta2 == 1 ]]
+then
+su -c wm density $den_inp
+elif [[ $eta2 == 3 ]]
+then :
+else exit
+fi
+
+elif [[ $work == 1 ]]; then
+unset work
+while true; do
+echo -e "${Cyan}Supported values:\n${Cayan}Pixels (720, 480, etc.)\nCustom (720x1280, 480x1024, etc.)"
+echo;echo -e -n "${Cyan}New resolution:${Cayan} "
+read res_inp; cline 6
+if [[ -z $res_inp ]]; then :
+else break
+fi
+done
+chktype=`echo $res_inp | grep x`
+chkspace_d=($res_inp)
+chkspace=${chkspace_d[1]}
+if [[ -z $chkspace ]]; then :; else echo "resolution should not contain spaces";sleep 1; fi
+if [[ -z $chktype ]]; then virgin=1; else virgin=0; fi
+if [[ $virgin == 0 ]]; then
+res_inp_spl="i${res_inp}p"
+xres=`echo $res_inp_spl | grep -o -P '(?<=i).*(?=x)'`
+yres=`echo $res_inp_spl | grep -o -P '(?<=x).*(?=p)'`
+elif [[ $virgin == 1 ]]
+then
+xres=$res_inp
+yres_e=$((xres * oyres))
+yres=$((yres_e / oxres))
+fi
+oxyres=$((oxres * oyres))
+xyres=$((xres * yres))
+n_density_e=$((density * xyres))
+n_density=$((n_density_e / oxyres))
+kk = 26;echo -e "${Cyan}New resolution: ${Cayan}${xres}x${yres}"
+echo -e "${Cyan}New density: ${Cayan}$n_density";kk = 26
+echo -e "${Cyan}Notes:${Cayan}"
+echo -e "+Pixel input is measured\n(ex. 720 becomes 720x1021)"
+echo -e "+Density is adapted\n(to cope with current resolution)";kk = 26
+echo -e "\033[0;46m1-> Proceed"
+echo -e "\033[0;101m2-> Cancel & exit"
+echo -e "\033[45m3-> Go back${R}"
+echo;echo -en "${BYellow}>>>${Cayan}"
+read eta
+if [[ $eta == 1 ]]
+then
+su -c wm size ${xres}x${yres};su -c wm density $n_density
+elif [[ $eta == 3 ]]
+then :
+else exit
+fi
+fi
+done
