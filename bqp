@@ -1,0 +1,102 @@
+#!/bin/bash
+
+Cyan='\033[0;96m'
+Cayan='\033[0;36m'
+BYellow='\033[1;33m'
+##############################
+#Config vars                 #
+##############################
+#Non-backed partitions color #
+NC='\033[0m'                 #
+#Backed partitions color     #
+YC='\033[0;32m'              #
+#Filename suffix             #
+bqp_st='backup_a145f'        #
+#Backup output location      #
+sd1=/storage/82E5-8925       #
+#Backup input location       #
+DIR_LOL=/dev/block/by-name   #
+##############################
+
+kk() { while [[ $kk_v -lt $2 ]];do kk_v=$((kk_v+1));echo -n -e ${BYellow}${1}${R};done;unset kk_v;echo;}
+
+bqp() {
+ clear
+ if [[ $1 == "-rm" ]]
+ then
+  rm -rf $sd1/${2}_${bqp_st}.img
+ elif [[ $1 == "list" ]]
+ then
+   BKED_BNAME=(`ls $sd1 | grep $bqp_st | sed -e "s/_${bqp_st}.img//g"`)
+   ALL_BNAME=`su -c ls $DIR_LOL`
+   for i in ${BKED_BNAME[@]}; do
+   ALL_BNAME=`echo $ALL_BNAME | sed -e "s/\b${i}\b/\`printf \"\033[32m${i}\033[0m\"\`/"`
+   done
+   echo -e "${YC}Backed_Up ${NC}- Not_Backed_Up";echo
+   echo -e $ALL_BNAME; echo
+ else
+  if [[ -z $1 ]]
+  then
+   BKED_BNAME=(`ls $sd1 | grep $bqp_st | sed -e "s/_${bqp_st}.img//g"`)
+   echo -e "${Cyan}Backup Partitions ${Cayan}(${DIR_LOL})"
+   echo -e "${YC}Backed Up ${Cayan}- Not Backed Up";echo
+   ALL_BNAME=${Cayan}`su -c ls $DIR_LOL`
+   for i in ${BKED_BNAME[@]}; do
+   ALL_BNAME=`echo $ALL_BNAME | sed -e "s/\b${i}\b/\`printf \"\033[32m${i}${Cayan}\"\`/"`
+   done
+   echo -e $ALL_BNAME; echo
+   echo -e "${Cayan}Enter ${Cyan}partition name${Cayan} to backup"
+   echo -e "${BYellow}>>>${YC}"
+   read ban
+  else
+   ban=$1
+  fi
+  ban2=`su -c ls $sd1 | grep ${ban}_$bqp_st`
+  if [[ -z $ban2 ]]
+  then
+   ban3=$sd1/${ban}_${bqp_st}.img
+   su -c dd if=$DIR_LOL/$ban of=$ban3
+  else
+   echo file already exists
+  fi
+ fi
+}
+
+handle() {
+arg0=$cmdd; arg1=${cmdd[1]}; arg2=${cmdd[2]}
+if [[ $arg0 == "bqp" ]]; then
+if [[ $arg1 == "-rm" ]]; then bqp -rm $arg2; echo "deleted ${arg2}"
+elif [[ $arg1 == "-sid" ]]; then DIR_LOL=$arg2; print
+elif [[ $arg1 == "-sod" ]]; then sd1=$arg2; print
+elif [[ $arg1 == "list" ]]; then bqp list
+else bqp; fi; fi;}
+
+print() {
+clear
+kk = 27
+echo -e "${Cyan}bqp ${Cayan}By BrotherBoard"
+kk = 27
+echo -e "${Cyan}Back up ${Cayan}partitions in your"
+echo -e "device, to an img ${Cyan}using dd"
+kk = 27
+echo -e "${Cyan}Input directory:"
+echo -e "${Cayan}$DIR_LOL"
+echo -e "${Cyan}Output directory"
+echo -e "${Cayan}$sd1"
+kk = 27
+echo -e "${Cyan}Usage:"
+echo -e "${Cayan}bqp run"
+echo -e "bqp partition_to_backup"
+echo -e "bqp list"
+echo -e "bqp ${YC}-rm${Cayan} backed_to_delete"
+echo -e "bqp ${YC}-sid${Cayan} /input/directory"
+echo -e "bqp ${YC}-sod${Cayan} /output/directory"
+kk = 27
+echo -e "${Cyan}To use outside without executing:"
+echo -e "${Cayan}mv bqp /your/bin/directory"
+kk = 27 ;}
+print
+while true; do
+echo -ne ">>>${YC}"; read cmd; cmdd=($cmd)
+if [[ -z $cmd ]]; then :
+else handle; fi; done
