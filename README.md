@@ -23,3 +23,6 @@ for localhosting and stuff, easier IP address management
 
 **Display Resolution Changer:**
 for changing the resolution and density of your device in an easy way
+
+**BQP**
+use dd utility to make backup images of device partitions, its smol read its code if u want
