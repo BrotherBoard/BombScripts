@@ -1,0 +1,278 @@
+#!/bin/bash
+
+# Debug
+#clear() { echo "would've cleared" ;}
+
+# Core vars
+R='\033[0m'
+C='\033[41m'
+G='\033[32m'
+O='\033[42m'
+# 106 && 96 # cyan || 104 && 94 # darkOP='\033[105m'
+OP='\033[104m'
+OPt='\033[94m'
+B='\033[30m'
+sn='%b\n'
+Cy="\033[0;106m"
+Cyt="\033[96m"
+Pi="\033[45m"
+Pit='\033[0;35m'
+ph_raw='[]'
+ph="$Cy$Cyt""$ph_raw""$R"
+zero='&&'
+now_char="$Cyt"
+row_err="Row count can be from 1 to 99"
+row_pro="Number of vertical rows:"
+col_err="Column count can be from 1 to 99"
+col_pro="Number of horizontal columns:"
+arg_err="draw: missing argument"
+use_tip="USAGE: draw [n row] [n col]"
+
+# Skip read if arguments were passed
+if [[ -z $1 ]]; then
+  clear
+  # Read rows
+  while true; do read -ep "$row_pro" row_old
+  [[ $row_old -lt 1 ]] || [[ $row_old -gt 99 ]] &&\
+  echo $row_err || break; done
+  # Read columns
+  while true; do read -ep "$col_pro" col
+  [[ $col -lt 1 ]] || [[ $col -gt 99 ]] &&\
+  echo $col_err || break; done
+else
+# complain & check
+[[ -z $2 ]] && {
+  printf "$arg_err"; printf "$sn$use_tip$sn"; exit ;} ||\
+  { [[ $1 -lt 1 ]] || [[ $1 -gt 99 ]] && echo $row_err ||\
+  [[ $2 -lt 1 ]] || [[ $2 -gt 99 ]] && echo $col_err ||\
+  row_old=$1; col=$2;}
+fi
+
+# Based vars
+row=$((row_old * 2))
+area=$((col * row_old))
+char=({A..Z}{A..Z})
+num=({01..99})
+now=0
+
+# Grid, data and cords, store every cell seprately
+grid_up() {
+grid=(`for ((i=0; i<area; i++)); do echo $ph; done`)
+rgrid=(`for ((i=0; i<area; i++)); do echo $ph_raw; done`)
+highs=(`for ((i=0; i<area; i++)); do echo No; done`)
+unset data
+}; grid_up
+
+ne=0; en=0
+while [[ $en -lt $row_old ]]; do
+for ((i=0; i<row_old; i++)); do
+cords[$ne]="${char[i]}${num[en]}"
+((ne++)); done; ((en++)); done
+
+# Modify function
+modify() {
+if [[ -z $1 ]]; then
+  echo
+  read -p "Cell number to modify:" cnum
+  [[ $cnum == $((now + 1)) ]] && brag=1 || brag=0
+  cnum=$((cnum - 1))
+else
+  cnum=$now
+fi
+
+if [[ $cnum -lt $area ]] && [[ ! $cnum -lt 0 ]]
+then
+  echo
+  echo -e "${G}Edit$R $((cnum + 1)) (${cords[cnum]}) [${grid[cnum]}]"
+  echo -ne "${G}Preview (raw)=$R"
+  echo "${grid[cnum]}"
+  echo -ne "${G}Preview (clean)=$R"
+  echo "${rgrid[cnum]}"
+  echo -e "${G}Data=$R${data[cnum]}"
+  echo -ne "${G}Data (raw)=$R"
+  echo "${data[cnum]}"
+  echo -ne "${G}New data=$R"
+  read cont
+  [[ ${#cont} == 1 ]] && cont="${cont}_"
+else
+  echo "Cell $((cnum + 1)) doesn't exist!"
+  sleep 1
+  return
+fi
+rgrid[$cnum]="${cont:0:2}"
+if [[ "${cont:1:1}" == ' ' ]]
+then
+  rgrid[$cnum]="${cont:0:1}"'_'
+fi
+[[ ${highs[cnum]} == Yes ]] && grid[$cnum]=$Pi$B${rgrid[cnum]}$R ||\
+grid[$cnum]=$Cy$B${rgrid[cnum]}$R
+data[$cnum]=$cont
+if [[ ! -z $1 ]] || [[ $brag == 1 ]]
+then
+  main --no-swap
+fi
+}
+
+# Clear all cells function
+nuke() {
+read -p "Sure u wanna clear alls? (Y/n)" sure
+case $sure in Y|y) unset grid rgrid data; grid_up;; esac
+}
+
+# Goto function
+goto() {
+read -p "Goto: number:" goto_num
+[[ $goto_num -gt $area ]] || [[ $goto_num -lt 1 ]] && {
+echo "no such cell!"; sleep 1; return
+}
+now=$((goto_num - 1))
+}
+
+# Highlight function
+high() {
+if [[ -z $1 ]]; then
+  read -p "HLight: number:" high_num
+  [[ $high_num == $((now + 1)) ]] && pep=1 || pep=0
+  [[ $high_num -gt $area ]] || [[ $high_num -lt 1 ]] &&\
+  echo -e "${R}no such cell!" && exit
+  high_num=$((high_num - 1))
+else
+  high_num=$now
+fi
+highs[$high_num]=Yes
+if [[ ${rgrid[high_num]} != $ph_raw ]]; then
+grid[$high_num]=$Pi$B${rgrid[high_num]}$R
+else
+grid[$high_num]=$Pit$Pi${rgrid[high_num]}$R
+fi
+[[ ! -z $1 ]] || [[ $pep == 1 ]] && main --no-swap || main
+}
+
+# UnHighlight function
+low() {
+if [[ -z $1 ]]; then
+  read -p "LLight: number:" low_num
+  [[ $low_num == $((now + 1)) ]] && pop=1 || pop=0
+  [[ $low_num -gt $area ]] || [[ $low_num -lt 1 ]] &&\
+  echo -e "${R}no such cell!" && exit
+  low_num=$((low_num - 1))
+else
+  low_num=$now
+fi
+highs[$low_num]=No
+if [[ ${rgrid[low_num]} != $ph_raw ]]; then
+grid[$low_num]=$Cy$B${rgrid[low_num]}$R
+else
+grid[$low_num]=$Cy$Cyt${rgrid[low_num]}$R
+fi
+[[ ! -z $1 ]] || [[ $pop == 1 ]] && main --no-swap || main
+}
+
+# Draw the first horizontal row (character row)
+char_row=`printf $R$zero; for ((i=0; i<row_old; i=$((i+2))));
+do printf "$C${char[i]}$R"
+[[ $((i+1)) -lt $row_old ]] && printf "${char[i+1]}"
+done; echo`
+
+# Main function, repeatable
+main() {
+# Next move valid or not?
+[[ $now -ge $((area - 1)) ]] && right_v=0 || right_v=1
+[[ $now -lt 1 ]] && left_v=0 || left_v=1
+[[ $now -lt $row_old ]] && up_v=0 || up_v=1
+[[ $now -ge $((area - row_old)) ]] && down_v=0 || down_v=1
+
+# Swap preview of selector based on now
+[[ $1 != --no-swap ]] && {
+if [[ ${highs[now]} != Yes ]]; then
+  [[ ! -z $naw ]] && { grid[$old_naw]=$naw; rgrid[$old_naw]=$naw2 ;}
+  naw=${grid[now]}; naw2=${rgrid[now]}; old_naw=$now
+  grid[$now]=$Cy$B${rgrid[now]}$R #hack
+  [[ ${rgrid[now]} == $ph_raw ]] && grid[$now]=$B${rgrid[now]}$R
+else
+  [[ ! -z $naw ]] && { grid[$old_naw]=$naw; rgrid[$old_naw]=$naw2 ;}
+  naw=${grid[now]}; naw2=${rgrid[now]}; old_naw=$now
+  grid[$now]=$Pi$B${rgrid[now]}$R #hack
+  [[ ${rgrid[now]} == $ph_raw ]] && grid[$now]=$O${rgrid[now]}$R
+fi
+} || {
+naw=${grid[now]}; naw2=${rgrid[now]}; old_naw=$now
+grid[$now]=$Cyt${rgrid[now]}$R #hack
+}
+
+# Check and highlight
+if [[ ${highs[now]} == Yes ]]; then
+grid[$now]=$R$OPt${rgrid[now]}$R #stuff
+[[ ${rgrid[now]} == $ph_raw ]] && grid[$now]=$OPt$OP${rgrid[now]}$R
+fi
+
+# Was done outside
+clear
+printf $char_row$sn
+
+# add newlines to grid based on rows to lines
+lines=(`printf "${grid[0]}"; for ((n=1; n<area; n++)); do
+[[ $((n % row_old)) == 0 ]] && printf '%b\n'
+printf "${grid[n]}"
+done; echo; exit`)
+
+# Draw the rest of hroizontal rows
+for ((i=0; i<col; i=$((i+2)))); do printf "$C${num[i]}$R"
+printf "${lines[i]}"; [[ $((i+1)) -lt $col ]] && {
+printf $sn"${num[i+1]}" && printf "${lines[i+1]}"$sn;}
+done; echo
+}
+
+# Start main() and read keys
+while true; do
+main
+printf $sn
+printf $G"Number=$R$((now + 1)) "$R
+printf $G"Cords=$R${cords[now]} "$R
+printf $G"Preview=$R${grid[now]}"$R$sn
+printf $G"Preview_raw=$R";echo "${grid[now]}"
+printf $G"Preview_clean=$R${rgrid[now]} "
+printf $G"HLight=$R${highs[now]}"$sn
+printf $G"Data="$R"${data[now]}"$sn
+printf $G"Data_raw="$R; echo "${data[now]}"
+printf $sn
+printf "[•] Move       [S] Edit selected"$sn
+printf "[M] Edit       [G] Goto"$sn
+printf "[H] HLight     [J] HLight slct"$sn
+printf "[L] LLight     [K] LLight slct"$sn
+printf "[W] Clear      [R] Refresh"$sn
+printf "[1] Up left    [2] Up right"$sn
+printf "[3] Down left  [4] Down right"$sn
+printf $sn
+printf "EMPT SLCT FULL SLCT"$sn
+printf "[$Cy${Cyt}Aa$R] [$R${B}Aa$R] [$Cy${B}Aa$R] [$R${Cyt}Aa$R] Normal"$sn
+printf "[$Pit${Pi}Aa$R] [$OPt${OP}Aa$R] [$Pi${B}Aa$R] [$R${OPt}Aa$R] Highlighted"$sn
+printf $sn$B
+while true; do
+read -n 1 key
+[[ $key =~ ^[1-9]+$ ]] && {
+case "$key" in
+  1) now=0 && break;;
+  2) now=$((row_old - 1)) && break;;
+  3) now=$((area - row_old)) && break;;
+  4) now=$((area - 1)) && break;;
+esac
+}
+[[ $key =~ ^[[:alpha:]]+$ ]] && {
+case "$key" in
+  A) [[ $up_v == 1 ]] && now=$((now - row_old)) && break;;
+  B) [[ $down_v == 1 ]] && now=$((now + row_old)) && break;;
+  C) [[ $right_v == 1 ]] && now=$((now + 1)) && break;;
+  D) [[ $left_v == 1 ]] && now=$((now - 1)) && break;;
+  M|m) printf $R && modify && break;;
+  W|w) printf $R && nuke && break;;
+  G|g) printf $R && goto && break;;
+  S|s) printf $R && modify -s && break;;
+  H|h) printf $R && high && break;;
+  J|j) printf $R && high -c && break;;
+  L|l) printf $R && low && break;;
+  K|k) printf $R && low -c && break;;
+  R|r) break;;
+esac
+}
+done; done
