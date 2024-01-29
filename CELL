@@ -2,58 +2,87 @@
 
 # Debug
 #clear() { echo "would've cleared" ;}
+DEBUG=No
+
+# Colors
+R='\033[0m'       ;C='\033[41m'
+G='\033[32m'      ;O='\033[42m'
+OP='\033[104m'    ;OPt='\033[94m'
+B='\033[30m'      ;sn='%b\n'
+Cy="\033[0;106m"  ;Cyt="\033[96m"
+Pi="\033[45m"     ;Pit='\033[0;35m'
 
 # Core vars
-R='\033[0m'
-C='\033[41m'
-G='\033[32m'
-O='\033[42m'
-# 106 && 96 # cyan || 104 && 94 # darkOP='\033[105m'
-OP='\033[104m'
-OPt='\033[94m'
-B='\033[30m'
-sn='%b\n'
-Cy="\033[0;106m"
-Cyt="\033[96m"
-Pi="\033[45m"
-Pit='\033[0;35m'
 ph_raw='[]'
 ph="$Cy$Cyt""$ph_raw""$R"
 zero='&&'
+tepp=yes
 now_char="$Cyt"
+FMT="fmtclr"
+
+# Text vars
 row_err="Row count can be from 1 to 99"
 row_pro="Number of vertical rows:"
 col_err="Column count can be from 1 to 99"
 col_pro="Number of horizontal columns:"
-arg_err="draw: missing argument"
-use_tip="USAGE: draw [n row] [n col]"
+arg_err="celler: missing argument"
+use_tip="usage:${sn}./CELL [n row] [n col] file"
+path_err="filename can not start with /"
+file_err="existing file is not a celler file"
 
 # Skip read if arguments were passed
 if [[ -z $1 ]]; then
-  clear
-  # Read rows
-  while true; do read -ep "$row_pro" row_old
-  [[ $row_old -lt 1 ]] || [[ $row_old -gt 99 ]] &&\
-  echo $row_err || break; done
-  # Read columns
-  while true; do read -ep "$col_pro" col
-  [[ $col -lt 1 ]] || [[ $col -gt 99 ]] &&\
-  echo $col_err || break; done
-else
-# complain & check
-[[ -z $2 ]] && {
-  printf "$arg_err"; printf "$sn$use_tip$sn"; exit ;} ||\
-  { [[ $1 -lt 1 ]] || [[ $1 -gt 99 ]] && echo $row_err ||\
+  printf "$arg_err$sn"
+  printf "$use_tip$sn"; exit
+elif [[ -z $3 ]] && [[ ! -z $2 ]]; then
+  printf "$arg_err$sn"
+  printf "$use_tip$sn"; exit
+elif [[ $3 == "/"* ]] || [[ $1 == "/"* ]]; then
+  printf "$path_err$sn"; exit
+elif [[ -z $2 ]] && [[ -z $3 ]]; then
+  echo loading file $1
+  file_new=No
+  file=$1
+  file_dir=`pwd`/$file
+  [[ `head -1 $1` != $FMT ]] && echo $file_err && exit
+elif [[ ! -z $3 ]]; then
+  [[ $1 -lt 1 ]] || [[ $1 -gt 99 ]] && echo $row_err ||\
   [[ $2 -lt 1 ]] || [[ $2 -gt 99 ]] && echo $col_err ||\
-  row_old=$1; col=$2;}
+  row_old=$1; col=$2; file=$3 file_new=No; file_dir=`pwd`/$file
+  [[ -z `ls -1 | grep -x $file` ]] && file_new=Yes
+else
+  printf "$arg_err$sn"
+  printf "$use_tip$sn"; exit
+fi
+
+# File is not new? load it!
+if [[ $file_new == No ]]; then
+  row=`head -2 $file | tail -1`
+  row_old=$((row / 2))
+  col=`head -3 $file | tail -1`
+  grid=(`head -4 $file | tail -1`)
+  rgrid=(`head -5 $file | tail -1`)
+  data=(`head -6 $file | tail -1`)
+  highs=(`head -7 $file | tail -1`)
+  area=`head -8 $file | tail -1`
+  now=`head -9 $file | tail -1`
 fi
 
 # Based vars
+[[ $file_new == Yes ]] && {
 row=$((row_old * 2))
 area=$((col * row_old))
+now=0;}
 char=({A..Z}{A..Z})
 num=({01..99})
-now=0
+
+[[ $DEBUG == Yes ]] && {
+echo "DEBGUG"
+echo "row=${row}"
+echo "col=${col}"
+echo "area=${area}"
+exit
+}
 
 # Grid, data and cords, store every cell seprately
 grid_up() {
@@ -61,7 +90,7 @@ grid=(`for ((i=0; i<area; i++)); do echo $ph; done`)
 rgrid=(`for ((i=0; i<area; i++)); do echo $ph_raw; done`)
 highs=(`for ((i=0; i<area; i++)); do echo No; done`)
 unset data
-}; grid_up
+}; [[ $file_new == Yes ]] && grid_up
 
 ne=0; en=0
 while [[ $en -lt $row_old ]]; do
@@ -132,9 +161,8 @@ now=$((goto_num - 1))
 high() {
 if [[ -z $1 ]]; then
   read -p "HLight: number:" high_num
-  [[ $high_num == $((now + 1)) ]] && pep=1 || pep=0
   [[ $high_num -gt $area ]] || [[ $high_num -lt 1 ]] &&\
-  echo -e "${R}no such cell!" && exit
+  echo -e "${R}no such cell!" && sleep 1 && return
   high_num=$((high_num - 1))
 else
   high_num=$now
@@ -145,7 +173,7 @@ grid[$high_num]=$Pi$B${rgrid[high_num]}$R
 else
 grid[$high_num]=$Pit$Pi${rgrid[high_num]}$R
 fi
-[[ ! -z $1 ]] || [[ $pep == 1 ]] && main --no-swap || main
+[[ -z $1 ]] && main || main --no-swap
 }
 
 # UnHighlight function
@@ -174,6 +202,27 @@ do printf "$C${char[i]}$R"
 [[ $((i+1)) -lt $row_old ]] && printf "${char[i+1]}"
 done; echo`
 
+# Save file
+save() {
+if [[ $file_new == Yes ]]; then
+  echo -e ${FMT} >> $file
+  echo -e $row >> $file
+  echo -e $col >> $file
+  [[ ${rgrid[now]} == $ph_raw ]] && [[ ${highs[now]} == Yes ]] &&\
+  grid[$now]=$Pit$Pi${rgrid[now]}$R || grid[$now]=$ph
+  echo -e ${grid[@]} >> $file
+  echo -e ${rgrid[@]} >> $file
+  echo -e ${data[@]} >> $file
+  echo -e ${highs[@]} >> $file
+  echo -e $area >> $file
+  echo -e $now >> $file
+  printf "${R}File was saved${sn}"
+  sleep 1
+else
+  [[ `head -1 $file` != ${FMT} ]] && echo $file_err && exit
+fi
+}
+
 # Main function, repeatable
 main() {
 # Next move valid or not?
@@ -187,7 +236,7 @@ main() {
 if [[ ${highs[now]} != Yes ]]; then
   [[ ! -z $naw ]] && { grid[$old_naw]=$naw; rgrid[$old_naw]=$naw2 ;}
   naw=${grid[now]}; naw2=${rgrid[now]}; old_naw=$now
-  grid[$now]=$Cy$B${rgrid[now]}$R #hack
+  grid[$now]=$Cy$B${rgrid[now]}$R
   [[ ${rgrid[now]} == $ph_raw ]] && grid[$now]=$B${rgrid[now]}$R
 else
   [[ ! -z $naw ]] && { grid[$old_naw]=$naw; rgrid[$old_naw]=$naw2 ;}
@@ -236,17 +285,24 @@ printf $G"HLight=$R${highs[now]}"$sn
 printf $G"Data="$R"${data[now]}"$sn
 printf $G"Data_raw="$R; echo "${data[now]}"
 printf $sn
-printf "[•] Move       [S] Edit selected"$sn
-printf "[M] Edit       [G] Goto"$sn
-printf "[H] HLight     [J] HLight slct"$sn
-printf "[L] LLight     [K] LLight slct"$sn
-printf "[W] Clear      [R] Refresh"$sn
-printf "[1] Up left    [2] Up right"$sn
-printf "[3] Down left  [4] Down right"$sn
+printf $G"File=$R${file} ${G}New=$R${file_new}"$sn
+printf $G"Directory=$R${file_dir}"$sn
+printf $sn
+printf "[•] Move w ABCD [•] Move w arrows"$sn
+printf "[M] Edit        [S] Edit selected"$sn
+printf "[R] Refresh     [G] Goto"$sn
+printf "[H] HLight      [J] HLight selected"$sn
+printf "[L] LLight      [K] LLight selected"$sn
+printf "[W] Clear       [P] Toggle tips"$sn
+printf "[1] Up left     [2] Up right"$sn
+printf "[3] Down left   [4] Down right"$sn
+printf "[X] Exit        [V] Save"$sn
+[[ $tepp == yes ]] && {
 printf $sn
 printf "EMPT SLCT FULL SLCT"$sn
 printf "[$Cy${Cyt}Aa$R] [$R${B}Aa$R] [$Cy${B}Aa$R] [$R${Cyt}Aa$R] Normal"$sn
 printf "[$Pit${Pi}Aa$R] [$OPt${OP}Aa$R] [$Pi${B}Aa$R] [$R${OPt}Aa$R] Highlighted"$sn
+}
 printf $sn$B
 while true; do
 read -n 1 key
@@ -273,6 +329,9 @@ case "$key" in
   L|l) printf $R && low && break;;
   K|k) printf $R && low -c && break;;
   R|r) break;;
+  P|p) [[ $tepp == yes ]] && tepp=no || tepp=yes; break;;
+  X|x) exit;;
+  V|v) printf $R && save; break;;
 esac
 }
 done; done
