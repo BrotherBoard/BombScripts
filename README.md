@@ -14,7 +14,7 @@ Note: DecimalBattery is deprecated, and its not guaranteed to show correct value
 **Decimal Battery:**
 to get your battery level in decimals for some unknown reason
 
-**Decimal Battery Clean**
+**Decimal Battery Clean:**
 same as Decimal Battery, but written in a cleaner way, doesnt touch your internal storage and uses bash.rc to save its config
 
 **Battery Level Changer:**
@@ -26,8 +26,8 @@ for localhosting and stuff, easier IP address management
 **Display Resolution Changer:**
 for changing the resolution and density of your device in an easy way
 
-**BQP**
+**BQP:**
 use dd utility to make backup images of device partitions, its smol read its code if u want
 
-**Celler**
+**Celler:**
 an app that generates a modifiable grid that can store data easily, with colors and highlights and stuff, easy to use ig and fast.
