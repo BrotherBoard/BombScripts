@@ -1,0 +1,76 @@
+#!/bin/bash
+
+# Colors
+b='\e[104;97m' ;y='\e[43;30m'
+g='\e[42;30m'  ;r='\e[41;97m'
+n='\e[0m'
+
+# Vars
+server=$1; taime=$2
+begin=`date +%s`
+defs=google.com
+deft=60
+best=0; worst=0
+good=0; bad=0
+
+# Usage
+[[ $1 == "--h"* ]] || [[ $1 == "-h"* ]] &&\
+echo "usage: ./PENG [server] [time in secs]"\
+echo "default: www.google.com [60s]" && exit 1
+
+# Default
+[[ -z $1 ]] && server=$defs
+[[ -z $2 ]] && taime=$deft
+
+# Report
+abt() {
+  echo; echo
+  echo -e "${g}Best  >$n$best"
+  echo -e "${b}Good  >$n$good"
+  echo -e "${y}Bad   >$n$bad"
+  echo -e "${r}Worse >$n$worse"
+  echo; echo "Total=${total}"
+  echo "Count=${num}"
+  echo "time=${meh}"
+  avg=$((total / num)); chk $avg
+  echo -e "Average=$col$avg$n ms"
+  exit 1
+}
+
+# Call report on KeyboardInterrupt
+trap abt INT
+
+# Change col based on input
+chk() {
+  if [[ $1 -lt 100 ]]
+  then
+    col=$g
+    ((best++))
+  elif [[ $1 -lt 200 ]]
+  then
+    col=$b
+    ((good++))
+  elif [[ $1 -lt 300 ]]
+  then
+    col=$y
+    ((bad++))
+  else
+    col=$r
+    ((worse++))
+  fi
+}
+
+# Interface
+echo "PING ${server} [^C] [${taime}s]"
+while true
+do
+  a=`ping -qc1 $server 2>&1 | awk -F'/' 'END{ print $5 }'`
+  a=`echo $a | sed 's/\..*//'`
+  chk $a
+  printf "$col$a$n "
+  ((num++))
+  total=$((total+a))
+  end=`date +%s`
+  meh=$((end - begin))
+  [[ $meh -gt $taime ]] && abt
+done
