@@ -3,20 +3,20 @@
 # Colors
 b='\e[104;97m' ;y='\e[43;30m'
 g='\e[42;30m'  ;r='\e[41;97m'
-n='\e[0m'
+n='\e[0m'      ;sn='%b\n'
 
 # Vars
 server=$1; taime=$2
 begin=`date +%s`
 defs=google.com
-deft=60
+deft=600
 best=0; worst=0
 good=0; bad=0
 
 # Usage
 [[ $1 == "--h"* ]] || [[ $1 == "-h"* ]] &&\
 echo "usage: ./PENG [server] [time in secs]"\
-echo "default: www.google.com [60s]" && exit 1
+echo "default: www.google.com [600s]" && exit 1
 
 # Default
 [[ -z $1 ]] && server=$defs
@@ -28,7 +28,7 @@ abt() {
   echo -e "${g}Best  >$n$best"
   echo -e "${b}Good  >$n$good"
   echo -e "${y}Bad   >$n$bad"
-  echo -e "${r}Worse >$n$worse"
+  echo -e "${r}Worst >$n$worse"
   echo; echo "Total=${total}"
   echo "Count=${num}"
   echo "time=${meh}"
@@ -48,11 +48,11 @@ chk() {
     ((best++))
   elif [[ $1 -lt 200 ]]
   then
-    col=$b
+    col=$y
     ((good++))
   elif [[ $1 -lt 300 ]]
   then
-    col=$y
+    col=$b
     ((bad++))
   else
     col=$r
@@ -61,16 +61,20 @@ chk() {
 }
 
 # Interface
-echo "PING ${server} [^C] [${taime}s]"
 while true
 do
-  a=`ping -qc1 $server 2>&1 | awk -F'/' 'END{ print $5 }'`
-  a=`echo $a | sed 's/\..*//'`
+  a=$(ping -qc1 $server 2>&1 | awk -F'/' 'END{ print $5 }' | sed 's/\..*//')
+  chk $avg
+  printf "\033[H"  # Move cursor to the start of the screen
+  printf "PING ${server} [^C] [${meh2}s] Avg=${col}${avg}"$sn$sn
   chk $a
-  printf "$col$a$n "
+  pep="${pep}${col}${a}${n} "
+  printf "$pep"
   ((num++))
   total=$((total+a))
-  end=`date +%s`
+  end=$(date +%s)
   meh=$((end - begin))
+  avg=$((total / num))
+  meh2=$((taime - meh))
   [[ $meh -gt $taime ]] && abt
 done
