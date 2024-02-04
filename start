@@ -13,6 +13,7 @@ echo "4-> IP Address Adder"
 echo "5-> Display Resolution Changer"
 echo "6-> BQP"
 echo "7-> Celler"
+echo "8-> Penger"
 echo "X-> Exit"
 echo
 read -e -p ">>>" ban
@@ -23,6 +24,7 @@ blud 4 "file=IPA"
 blud 5 "file=DRC"
 blud 6 "file=BQP"
 blud 7 "file=CELL"
+blud 8 "file=PENG"
 blud x "exit"
 blud X "exit"
 chmod +x ${file} && ./${file}
