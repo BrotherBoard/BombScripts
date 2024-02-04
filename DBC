@@ -2,6 +2,20 @@
 brc="/data/data/com.termux/files/usr/etc/bash.bashrc"
 dir="/sys/class/power_supply/battery/charge_counter"
 NUMBER='^[0-9]+$'
+DVIDE=2000
+
+catch() {
+echo "Catching divisor (waiting for battery to change by 0.1%)"
+echo "This is a one-time process"
+DVIDE_TEMP=`su -c cat $dir`
+DVIDE_NEW=$DVIDE_TEMP
+while [[ $DVIDE_TEMP == $DVIDE_NEW ]]; do
+DVIDE_NEW=`su -c cat $dir`; sleep 0.5; done
+DVIDE=$((DVIDE_TEMP - DVIDE_NEW))
+DVIDE=`echo $DVIDE | sed 's/-//'`
+echo "Detected divisor ${DVIDE}, press any key to continue"
+read; clear
+}
 
 # BRC SAVE SAVE_NAME SAVE_VALUE
 # VARIABLE=`BRC LOAD SAVE_NAME`
@@ -26,12 +40,12 @@ virgin=`BRC LOAD virgin`
 function GET () {
  if [[ $1 == "-NRM" ]]
  then
-  lu1=`cat $dir`;lu3=`echo $((${lu1} / 30000))`;echo $lu3
+  lu1=`su -c cat $dir`;lu3=`echo $((lu1 / $((DVIDE * 10))))`;echo $lu3
  elif [[ $1 == "-ADV" ]]
  then
-  lu1=`cat $dir`;lu2=`echo $((${lu1} / 3000))`;echo $lu2
+  lu1=`su -c cat $dir`;lu2=`echo $((lu1 / DVIDE))`;echo $lu2
  else
-  lu1=`cat $dir`;lu2=`echo $((${lu1} / 3000))`;lu3=`echo $((${lu1} / 30000))`;lu4=`echo $((${lu3} * 10))`;lu5=`echo $((${lu2} - ${lu4}))`;echo "${lu3}.${lu5}"
+  lu1=`su -c cat $dir`;lu2=`echo $((lu1 / DVIDE))`;lu3=`echo $((${lu1} / $((DVIDE * 10))))`;lu4=`echo $((${lu3} * 10))`;lu5=`echo $((${lu2} - ${lu4}))`;echo "${lu3}.${lu5}"
  fi
 }
 
@@ -166,9 +180,15 @@ function SETTINGS_CONF () {
 TESTFOR_1=`BRC LOAD IExist`
 if [[ -z $TESTFOR_1 ]]
 then
+ catch
  virgin=1
  BRC SAVE virgin 1
- clear;echo "Welcome to Decimal Battery";echo;echo "For this script to work you must:";echo "-> Grant root access to Terminal";echo;echo "which can be done by:";echo "-> su -c pwd";echo;echo "Enter -> Don't show this again"
+ clear;echo "Welcome to Decimal Battery";echo
+ echo "For this script to work you must:"
+ echo "-> Grant root access to Terminal";echo
+ echo "which can be done by:"
+ echo "-> su -c pwd";echo
+ echo "Enter -> Don't show this again"
  echo;read -e -p ">>>" PAGE_0
  if [[ -z $PAGE_0 ]]
   then
