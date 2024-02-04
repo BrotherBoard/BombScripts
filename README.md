@@ -5,9 +5,9 @@ i was tired of finding the files and stuff so i combined them to one file that o
 
 usage:
 click the green GET button and download zip
-or clone this repo idc
+or clone this repo idc, do ./start or start each manually 
 
-Note: DecimalBattery is deprecated, and its not guaranteed to show correct values, in that case you can use Decimal Battery app in BombApps
+Note: DecimalBattery is deprecated, and its not guaranteed to show correct values, and it uses root, in that case you can use DBB app in BombApps which doesn't require root.
 
 **included scripts:**
 
@@ -30,4 +30,7 @@ for changing the resolution and density of your device in an easy way
 use dd utility to make backup images of device partitions, its smol read its code if u want
 
 **Celler:**
-an app that generates a modifiable grid that can store data easily, with colors and highlights and stuff, easy to use ig and fast.
+generates a modifiable grid that can store data easily, with colors and highlights and stuff, easy to use ig and fast.
+
+**Peng:**
+pings a specific server for a specific time, on time end / on interrupt, prints report. colors are based on how good is the number.
