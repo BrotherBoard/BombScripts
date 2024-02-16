@@ -26,8 +26,8 @@ echo "default: www.google.com [600s]" && exit 1
 abt() {
   echo; echo
   echo -e "${g}Best  >$n$best"
-  echo -e "${b}Good  >$n$good"
-  echo -e "${y}Bad   >$n$bad"
+  echo -e "${y}Good  >$n$good"
+  echo -e "${b}Bad   >$n$bad"
   echo -e "${r}Worst >$n$worse"
   echo; echo "Total=${total}"
   echo "Count=${num}"
@@ -61,12 +61,13 @@ chk() {
 }
 
 # Interface
+clear
 while true
 do
   a=$(ping -qc1 $server 2>&1 | awk -F'/' 'END{ print $5 }' | sed 's/\..*//')
   chk $avg
   printf "\033[H"  # Move cursor to the start of the screen
-  printf "PING ${server} [^C] [${meh2}s] Avg=${col}${avg}"$sn$sn
+  printf "PING ${server} [^C] [${meh2}s] Avg=${col}${avg}"'\033[30m'$R$sn$sn
   chk $a
   pep="${pep}${col}${a}${n} "
   printf "$pep"
